@@ -4,6 +4,170 @@
 
 @section('content')
 
+@php
+// 1. Featured Pets (IDs 1-10 in shop catalog)
+$featuredPets = [
+    ['id'=>1, 'name'=>'Golden Retriever', 'emoji'=>'🐕', 'category'=>'Dogs', 'price'=>18000, 'badge'=>'popular', 'desc'=>'Friendly and loyal family companion.'],
+    ['id'=>2, 'name'=>'Siamese Kitten', 'emoji'=>'🐱', 'category'=>'Cats', 'price'=>12000, 'badge'=>'new', 'desc'=>'Elegant and affectionate with blue eyes.'],
+    ['id'=>5, 'name'=>'African Grey', 'emoji'=>'🦜', 'category'=>'Birds', 'price'=>45000, 'badge'=>'premium', 'desc'=>'Highly intelligent and impressive mimicry.'],
+];
+
+// 2. Essential Supplies (IDs 11-24 in shop catalog)
+$essentialSupplies = [
+    ['id'=>11, 'name'=>'Premium Kibble', 'emoji'=>'🍖', 'category'=>'Food', 'price'=>850, 'badge'=>'bestseller', 'desc'=>'High-protein formula for puppies.'],
+    ['id'=>13, 'name'=>'Self-Cleaning Litter', 'emoji'=>'📦', 'category'=>'Accessories', 'price'=>4500, 'badge'=>'new', 'desc'=>'Hands-free maintenance.'],
+    ['id'=>21, 'name'=>'Orthopedic Bed', 'emoji'=>'🛏️', 'category'=>'Accessories', 'price'=>2200, 'badge'=>'popular', 'desc'=>'Memory foam for joint support.'],
+];
+
+// 3. Services (IDs 25-28 in shop catalog) - ADDING 'id' HERE FIXES YOUR ERROR
+$services = [
+    [
+        'id' => 25, 
+        'title' => 'Full Grooming', 
+        'icon' => '✂️', 
+        'desc' => 'Complete bath, haircut, and nail trimming.',
+    ],
+    [
+        'id' => 26, 
+        'title' => 'Vet Checkup', 
+        'icon' => '🩺', 
+        'desc' => 'General health assessment by professionals.',
+    ],
+    [
+        'id' => 27, 
+        'title' => 'Pet Boarding', 
+        'icon' => '🏨', 
+        'desc' => 'Safe and comfortable overnight stays.',
+    ],
+];
+@endphp
+{{-- ─── EXTRA STYLES FOR PRODUCTS SECTION ─── --}}
+<style>
+/* ── PRODUCTS SECTION ── */
+.products-section {
+    padding: 6rem 1.5rem;
+    background: var(--cream, #FDF8F1);
+}
+.products-section .section-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.products-grid-landing {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+.product-card-landing {
+    background: #fff;
+    border-radius: 1.5rem;
+    border: 2px solid #F3E9DC;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+}
+.product-card-landing:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(45,36,30,0.10);
+    border-color: #EBD7BC;
+}
+.product-card-img-lnd {
+    aspect-ratio: 1;
+    background: #FDF8F1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    position: relative;
+    border-bottom: 1px solid #F3E9DC;
+}
+.product-badge-lnd {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+}
+.badge-bestseller-lnd { background: #FEE2E2; color: #DC2626; }
+.badge-new-lnd        { background: #E9F7F2; color: #34A853; }
+.badge-popular-lnd    { background: #FDF2E9; color: #E68A39; }
+.badge-fun-lnd        { background: #E9F0FE; color: #2563EB; }
+.badge-premium-lnd    { background: #FEF9C3; color: #B45309; }
+.badge-essential-lnd  { background: #CFFAFE; color: #0E7490; }
+
+.product-card-body-lnd {
+    padding: 1.2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.product-category-lnd {
+    font-size: 0.68rem;
+    font-weight: 900;
+    color: #E68A39;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+}
+.product-name-lnd {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #2D241E;
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
+}
+.product-desc-lnd {
+    font-size: 0.8rem;
+    color: #A68B6D;
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 0.9rem;
+}
+.product-footer-lnd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.product-price-lnd {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #2D241E;
+}
+.btn-shop-lnd {
+    background: #E68A39;
+    color: white;
+    border: none;
+    padding: 0.45rem 1rem;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+.btn-shop-lnd:hover {
+    background: #CF7529;
+    transform: scale(1.04);
+}
+
+@media (max-width: 768px) {
+    .products-grid-landing { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+}
+@media (max-width: 480px) {
+    .products-grid-landing { grid-template-columns: 1fr; }
+}
+</style>
+
 <!-- =================== NAVBAR =================== -->
 <nav class="navbar">
     <div class="nav-inner">
@@ -15,6 +179,7 @@
         <ul class="nav-links">
             <li><a href="#about">About</a></li>
             <li><a href="#pets">Our Pets</a></li>
+            <li><a href="#products">Our Products</a></li>
             <li><a href="#services">Services</a></li>
             <li><a href="#testimonials">Reviews</a></li>
             <li><a href="#contact">Contact</a></li>
@@ -42,6 +207,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <a href="#about">About</a>
         <a href="#pets">Our Pets</a>
+        <a href="#products">Our Products</a>
         <a href="#services">Services</a>
         <a href="#testimonials">Reviews</a>
         <a href="#contact">Contact</a>
@@ -99,7 +265,7 @@
                 <div class="pet-emoji-large">🐕</div>
                 <div class="card-info">
                     <span class="card-name">Golden Retriever</span>
-                    <span class="card-price">₱12,500</span>
+                    <span class="card-price">₱18,000</span>
                 </div>
                 <div class="card-badge">Available Now</div>
             </div>
@@ -161,6 +327,18 @@
 
 
 <!-- =================== FEATURED PETS =================== -->
+{{--
+    IMPORTANT: Your HomeController must include an 'id' field in $featuredPets
+    that matches the catalog IDs in shop.blade.php (1–10).
+
+    Example in HomeController@index:
+    $featuredPets = [
+        ['id'=>1,  'emoji'=>'🐕', 'category'=>'Dogs',  'name'=>'Golden Retriever Puppy', 'badge'=>'Popular', 'desc'=>'...', 'price'=>'₱18,000'],
+        ['id'=>2,  'emoji'=>'🐱', 'category'=>'Cats',  'name'=>'Siamese Kitten',          'badge'=>'New',     'desc'=>'...', 'price'=>'₱12,000'],
+        ['id'=>5,  'emoji'=>'🦜', 'category'=>'Birds', 'name'=>'African Grey Parrot',     'badge'=>'Premium', 'desc'=>'...', 'price'=>'₱45,000'],
+        ['id'=>10, 'emoji'=>'🐶', 'category'=>'Dogs',  'name'=>'Shih Tzu Puppy',          'badge'=>'Popular', 'desc'=>'...', 'price'=>'₱22,000'],
+    ];
+--}}
 <section class="pets-section" id="pets">
     <div class="section-inner">
         <div class="section-header">
@@ -182,7 +360,11 @@
                     <p class="pet-desc">{{ $pet['desc'] }}</p>
                     <div class="pet-footer">
                         <span class="pet-price">{{ $pet['price'] }}</span>
-                        <button class="btn-adopt">Inquire</button>
+                        {{-- Clicking "Add to Cart" goes to the shop and auto-adds this pet --}}
+                        <a href="{{ route('customer.shop', ['addToCart' => $pet['id']]) }}"
+                           class="btn-adopt">
+                            Add to Cart 🛒
+                        </a>
                     </div>
                 </div>
             </div>
@@ -190,14 +372,81 @@
         </div>
 
         <div class="pets-cta">
-            <a href="#" class="btn-primary">View All Pets</a>
+            <a href="{{ route('customer.shop', ['type' => 'pet']) }}" class="btn-primary">View All Pets 🐾</a>
         </div>
     </div>
 </section>
 <!-- =================== END FEATURED PETS =================== -->
 
 
+<!-- =================== OUR PRODUCTS =================== -->
+<section class="products-section" id="products">
+    <div class="section-inner">
+        <div class="section-header">
+            <div class="section-label">Our Products</div>
+            <h2>Premium Supplies for <em>Happy Pets</em></h2>
+            <p>Everything your companion needs — food, toys, grooming, and more.</p>
+        </div>
+
+        @php
+        // catalogId matches the 'id' field in the shop catalog (shop.blade.php)
+        $featuredProducts = [
+            ['catalogId' => 11, 'name' => 'Premium Puppy Kibble',    'emoji' => '🍖', 'category' => 'Food',        'badge' => 'bestseller', 'badgeLabel' => 'Bestseller', 'desc' => 'High-protein formula specially crafted for healthy, growing puppies.',             'price' => '₱850'],
+            ['catalogId' => 12, 'name' => 'Interactive Cat Wand',     'emoji' => '🧶', 'category' => 'Toys',        'badge' => 'fun',        'badgeLabel' => 'Fun',        'desc' => 'Feather wand toy to keep your feline entertained and active for hours.',          'price' => '₱350'],
+            ['catalogId' => 14, 'name' => 'Grooming Brush Set',       'emoji' => '🪮', 'category' => 'Grooming',    'badge' => 'popular',    'badgeLabel' => 'Popular',    'desc' => '3-piece set for all coat types — includes slicker brush, comb, and deshedder.', 'price' => '₱1,200'],
+            ['catalogId' => 13, 'name' => 'Self-Cleaning Litter Box', 'emoji' => '📦', 'category' => 'Accessories', 'badge' => 'new',        'badgeLabel' => 'New',        'desc' => 'Automatic self-cleaning mechanism for completely hassle-free maintenance.',       'price' => '₱4,500'],
+            ['catalogId' => 20, 'name' => 'Pet Vitamin Drops',        'emoji' => '💊', 'category' => 'Health',      'badge' => 'essential',  'badgeLabel' => 'Essential',  'desc' => 'Daily multivitamin liquid drops for dogs and cats. Easy to administer.',         'price' => '₱480'],
+            ['catalogId' => 21, 'name' => 'Orthopedic Dog Bed',       'emoji' => '🛏️', 'category' => 'Accessories', 'badge' => 'popular',    'badgeLabel' => 'Popular',    'desc' => 'Memory foam bed that supports joints. Removable and machine-washable cover.',    'price' => '₱2,200'],
+            ['catalogId' => 24, 'name' => 'Automatic Pet Feeder',     'emoji' => '🤖', 'category' => 'Accessories', 'badge' => 'new',        'badgeLabel' => 'New',        'desc' => 'Programmable feeder with 4L hopper. Wi-Fi app control for scheduled meals.',    'price' => '₱3,800'],
+            ['catalogId' => 16, 'name' => 'Hamster Exercise Wheel',   'emoji' => '🎡', 'category' => 'Toys',        'badge' => 'fun',        'badgeLabel' => 'Fun',        'desc' => 'Silent spinner wheel, 8-inch diameter. Perfect for hamsters and small pets.',    'price' => '₱650'],
+        ];
+        @endphp
+
+        <div class="products-grid-landing">
+            @foreach($featuredProducts as $product)
+            <div class="product-card-landing">
+                <div class="product-card-img-lnd">
+                    <span>{{ $product['emoji'] }}</span>
+                    <span class="product-badge-lnd badge-{{ $product['badge'] }}-lnd">{{ $product['badgeLabel'] }}</span>
+                </div>
+                <div class="product-card-body-lnd">
+                    <div class="product-category-lnd">{{ $product['category'] }}</div>
+                    <h3 class="product-name-lnd">{{ $product['name'] }}</h3>
+                    <p class="product-desc-lnd">{{ $product['desc'] }}</p>
+                    <div class="product-footer-lnd">
+                        <span class="product-price-lnd">{{ $product['price'] }}</span>
+                        {{-- Clicking "Add to Cart" goes to shop and auto-adds this product --}}
+                        <a href="{{ route('customer.shop', ['addToCart' => $product['catalogId']]) }}"
+                           class="btn-shop-lnd">
+                            Add to Cart 🛒
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div class="pets-cta">
+            <a href="{{ route('customer.shop', ['type' => 'product']) }}" class="btn-primary">View All Products 🛍️</a>
+        </div>
+    </div>
+</section>
+<!-- =================== END OUR PRODUCTS =================== -->
+
+
 <!-- =================== SERVICES =================== -->
+{{--
+    IMPORTANT: Your HomeController must include an 'id' field in $services
+    that matches the catalog IDs in shop.blade.php (25–28).
+
+    Example in HomeController@index:
+    $services = [
+        ['id'=>25, 'icon'=>'✂️', 'title'=>'Full Pet Grooming',   'desc'=>'Complete bath, haircut, nail trim, and ear cleaning.'],
+        ['id'=>26, 'icon'=>'🩺', 'title'=>'Basic Vet Checkup',   'desc'=>'General health assessment by our licensed veterinarians.'],
+        ['id'=>27, 'icon'=>'🏨', 'title'=>'Overnight Boarding',  'desc'=>'Safe, comfortable overnight stay with daily playtime included.'],
+        ['id'=>28, 'icon'=>'🦮', 'title'=>'Obedience Training',  'desc'=>'5-session behavioral training course for dogs of all ages.'],
+    ];
+--}}
 <section class="services-section" id="services">
     <div class="section-inner">
         <div class="section-header light">
@@ -212,9 +461,17 @@
                 <div class="service-icon">{{ $service['icon'] }}</div>
                 <h4>{{ $service['title'] }}</h4>
                 <p>{{ $service['desc'] }}</p>
-                <a href="#" class="service-link">Learn more →</a>
+                {{-- "Book Now" goes to shop and auto-adds this service to cart --}}
+                <a href="{{ route('customer.shop', ['addToCart' => $service['id']]) }}"
+                   class="service-link">
+                    Book Now →
+                </a>
             </div>
             @endforeach
+        </div>
+
+        <div class="pets-cta" style="margin-top: 45px; text-align: center;">
+            <a href="{{ route('customer.shop', ['type' => 'service']) }}" class="btn-primary">View All Services 📋</a>
         </div>
     </div>
 </section>
@@ -229,7 +486,8 @@
             <h3>First Visit Special — Get <strong>20% OFF</strong> on Grooming!</h3>
             <p>Use code <strong>PAWLOVE</strong> when you book your first grooming session.</p>
         </div>
-        <a href="#" class="btn-promo">Book Now</a>
+        {{-- Book Now links to Full Pet Grooming (id 25) --}}
+        <a href="{{ route('customer.shop', ['addToCart' => 25]) }}" class="btn-promo">Book Now</a>
     </div>
 </section>
 <!-- =================== END PROMO BANNER =================== -->
@@ -322,22 +580,22 @@
         <div class="footer-links">
             <div class="footer-col">
                 <h5>Shop</h5>
-                <a href="#">Dogs</a>
-                <a href="#">Cats</a>
-                <a href="#">Birds</a>
-                <a href="#">Rabbits</a>
+                <a href="{{ route('customer.shop', ['type' => 'pet']) }}">All Pets</a>
+                <a href="{{ route('customer.shop', ['type' => 'pet']) }}">Dogs</a>
+                <a href="{{ route('customer.shop', ['type' => 'pet']) }}">Cats</a>
+                <a href="{{ route('customer.shop', ['type' => 'product']) }}">Supplies</a>
             </div>
             <div class="footer-col">
                 <h5>Services</h5>
-                <a href="#">Grooming</a>
-                <a href="#">Veterinary</a>
-                <a href="#">Boarding</a>
-                <a href="#">Training</a>
+                <a href="{{ route('customer.shop', ['addToCart' => 25]) }}">Grooming</a>
+                <a href="{{ route('customer.shop', ['addToCart' => 26]) }}">Veterinary</a>
+                <a href="{{ route('customer.shop', ['addToCart' => 27]) }}">Boarding</a>
+                <a href="{{ route('customer.shop', ['addToCart' => 28]) }}">Training</a>
             </div>
             <div class="footer-col">
                 <h5>Support</h5>
                 <a href="#">FAQ</a>
-                <a href="#">Contact Us</a>
+                <a href="#contact">Contact Us</a>
                 <a href="#">Shipping Info</a>
                 <a href="#">Returns</a>
             </div>

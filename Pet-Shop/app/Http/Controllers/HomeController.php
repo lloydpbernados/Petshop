@@ -13,6 +13,7 @@ class HomeController extends Controller
     {
         $featuredPets = [
             [
+                'id'       => 1,  // ← ADD ID matching shop catalog
                 'name'     => 'Golden Retriever',
                 'category' => 'Dogs',
                 'price'    => '₱12,500',
@@ -21,6 +22,7 @@ class HomeController extends Controller
                 'desc'     => 'Friendly, loyal & great with families.',
             ],
             [
+                'id'       => 2,  // ← ADD ID
                 'name'     => 'Persian Cat',
                 'category' => 'Cats',
                 'price'    => '₱8,000',
@@ -29,6 +31,7 @@ class HomeController extends Controller
                 'desc'     => 'Calm, gentle & incredibly fluffy.',
             ],
             [
+                'id'       => 3,  // ← ADD ID
                 'name'     => 'Holland Lop',
                 'category' => 'Rabbits',
                 'price'    => '₱3,200',
@@ -37,6 +40,7 @@ class HomeController extends Controller
                 'desc'     => 'Compact, sociable & super cuddly.',
             ],
             [
+                'id'       => 5,  // ← ADD ID (skip 4 if not featured)
                 'name'     => 'African Grey',
                 'category' => 'Birds',
                 'price'    => '₱22,000',
@@ -46,13 +50,35 @@ class HomeController extends Controller
             ],
         ];
 
+        // 🔧 SERVICES: Added 'id' matching shop.blade.php catalog (IDs 25-28)
         $services = [
-            ['icon' => '✂️', 'title' => 'Pet Grooming',    'desc' => 'Full bath, trim & spa treatments for your beloved pet.'],
-            ['icon' => '🏥', 'title' => 'Veterinary Care', 'desc' => 'In-house vet consultations, vaccines & health check-ups.'],
-            ['icon' => '🏠', 'title' => 'Pet Boarding',    'desc' => 'Safe, cozy overnight stays while you\'re away.'],
-            ['icon' => '🎓', 'title' => 'Pet Training',    'desc' => 'Professional obedience & behavioral training sessions.'],
-            ['icon' => '🛒', 'title' => 'Pet Supplies',    'desc' => 'Premium food, toys, accessories & wellness products.'],
-            ['icon' => '🚗', 'title' => 'Pet Transport',   'desc' => 'Safe door-to-door delivery & pickup services.'],
+            [
+                'id'    => 25,  // ← MATCHES shop catalog ID for Full Pet Grooming
+                'icon'  => '✂️', 
+                'title' => 'Pet Grooming',    
+                'desc'  => 'Full bath, trim & spa treatments for your beloved pet.',
+            ],
+            [
+                'id'    => 26,  // ← MATCHES shop catalog ID for Basic Vet Checkup
+                'icon'  => '🏥', 
+                'title' => 'Veterinary Care', 
+                'desc'  => 'In-house vet consultations, vaccines & health check-ups.',
+            ],
+            [
+                'id'    => 27,  // ← MATCHES shop catalog ID for Overnight Boarding
+                'icon'  => '🏠', 
+                'title' => 'Pet Boarding',    
+                'desc'  => 'Safe, cozy overnight stays while you\'re away.',
+            ],
+            [
+                'id'    => 28,  // ← MATCHES shop catalog ID for Obedience Training
+                'icon'  => '🎓', 
+                'title' => 'Pet Training',    
+                'desc'  => 'Professional obedience & behavioral training sessions.',
+            ],
+            // Optional: Remove or add IDs for these if they exist in your shop catalog
+            // ['icon' => '🛒', 'title' => 'Pet Supplies', 'desc' => '...'],
+            // ['icon' => '🚗', 'title' => 'Pet Transport', 'desc' => '...'],
         ];
 
         $testimonials = [

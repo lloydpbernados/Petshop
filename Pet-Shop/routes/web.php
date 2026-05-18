@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
-// 1. ADD THIS LINE: Import the ShopController
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\Customer\OrderTrackingController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -59,7 +60,10 @@ Route::prefix('admin')->group(function () {
 */
 Route::prefix('customer')->group(function () {
     
-    // 2. UPDATED: Points to ShopController index method
     Route::get('/shop', [ShopController::class, 'index'])->name('customer.shop');
+    Route::get('/track-order', [OrderTrackingController::class, 'showForm'])->name('order.track');
+    Route::post('/track-order', [OrderTrackingController::class, 'track'])->name('order.track.search');
+    Route::post('/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
+    Route::get('/checkout/success', [ShopController::class, 'showSuccess'])->name('shop.success');
 
 });

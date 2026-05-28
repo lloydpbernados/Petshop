@@ -6,31 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id(); // Internal primary key
-            
-            // ✅ Alphanumeric Order ID for customer-facing tracking (e.g., PH-MPATB538-5850)
-            $table->string('order_id', 50)->unique()->nullable();
-            
-            $table->string('email');
+            $table->id();
+            $table->string('order_number', 50)->unique()->nullable();
             $table->string('customer_name');
-            $table->string('item_name');
-            $table->decimal('price', 10, 2);
-            $table->string('status')->default('Pending');
+            $table->string('email');
             $table->text('shipping_address')->nullable();
+            $table->string('status')->default('pending');
+            $table->string('payment_method')->default('cash');
+            $table->string('gcash_reference')->nullable();
             $table->text('tracking_notes')->nullable();
+            $table->timestamp('ordered_at')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('orders');

@@ -67,15 +67,15 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div class="relative flex-1 min-w-[140px]">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                        <input type="text" id="searchQ" placeholder="Search products…" oninput="renderTable()" 
-                               class="pl-9 pr-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] focus:ring-1 focus:ring-[#E68A39] transition-all w-full text-[#2D241E]">
+                        <input type="text" id="searchQ" placeholder="Search products…" oninput="loadInventory()"
+                               class="pl-9 pr-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] w-full text-[#2D241E]">
                     </div>
-                    <select id="filterCat" onchange="renderTable()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
+                    <select id="filterCat" onchange="loadInventory()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
                         <option value="">All Categories</option>
                         <option>Food</option><option>Toys</option>
-                        <option>Accessories</option><option>Health</option><option>Pets</option>
+                        <option>Accessories</option><option>Health</option><option>Grooming</option>
                     </select>
-                    <select id="filterStatus" onchange="renderTable()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
+                    <select id="filterStatus" onchange="loadInventory()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
                         <option value="">All Status</option>
                         <option value="ok">In Stock</option>
                         <option value="low">Low Stock</option>
@@ -96,7 +96,9 @@
                             <th class="px-4 sm:px-6 py-3 sm:py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody" class="divide-y divide-[#FDF8F1]"></tbody>
+                    <tbody id="tbody" class="divide-y divide-[#FDF8F1]">
+                        <tr><td colspan="6" class="text-center py-12 text-gray-400 text-sm">Loading…</td></tr>
+                    </tbody>
                 </table>
             </div>
             <div id="emptyMsg" class="hidden text-center py-12 sm:py-16 text-gray-400">
@@ -106,7 +108,6 @@
         </div>
 
         <div class="flex flex-col gap-4 sm:gap-6">
-
             <div class="bg-white p-5 sm:p-6 rounded-4xl sm:rounded-[2.5rem] border border-[#F3E9DC] shadow-sm">
                 <div class="flex items-center justify-between mb-4 sm:mb-6">
                     <h3 class="font-serif-brand text-lg sm:text-xl text-[#2D241E]">Categories</h3>
@@ -114,13 +115,11 @@
                 </div>
                 <div id="catBreakdown" class="space-y-3 sm:space-y-4"></div>
             </div>
-
             <div class="bg-white p-5 sm:p-6 rounded-4xl sm:rounded-[2.5rem] border border-[#F3E9DC] shadow-sm">
                 <h3 class="font-serif-brand text-lg sm:text-xl text-[#2D241E] mb-1 sm:mb-2">Quick Restock</h3>
                 <p class="text-xs text-gray-400 mb-3 sm:mb-4">Items that need attention right now.</p>
                 <div id="restockList" class="space-y-1"></div>
             </div>
-
         </div>
     </div>
 </div>
@@ -149,7 +148,6 @@
                     </div>
                 </div>
             </div>
-
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Product Name</label>
                 <input id="mName" type="text" placeholder="e.g. Organic Cat Nip" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
@@ -160,7 +158,7 @@
                     <select id="mCat" class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm">
                         <option value="">Select…</option>
                         <option>Food</option><option>Toys</option>
-                        <option>Accessories</option><option>Health</option><option>Pets</option>
+                        <option>Accessories</option><option>Health</option><option>Grooming</option>
                     </select>
                 </div>
                 <div>
@@ -188,7 +186,7 @@
         </div>
         <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
             <button onclick="closeModal('itemModal')" class="flex-1 px-4 sm:px-6 py-3 border border-[#EBD7BC] text-[#5C4D3C] rounded-xl font-bold hover:bg-[#FDF8F1] transition-colors text-sm">Cancel</button>
-            <button onclick="saveItem()" class="flex-1 px-4 sm:px-6 py-3 bg-[#E68A39] text-white rounded-xl font-bold shadow-md hover:bg-[#cf7529] transition-colors text-sm">Save Item</button>
+            <button onclick="saveItem()" id="saveBtn" class="flex-1 px-4 sm:px-6 py-3 bg-[#E68A39] text-white rounded-xl font-bold shadow-md hover:bg-[#cf7529] transition-colors text-sm">Save Item</button>
         </div>
     </div>
 </div>
@@ -200,8 +198,8 @@
             <h3 class="font-serif-brand text-xl sm:text-2xl text-[#2D241E]">Restock Item</h3>
             <button onclick="closeModal('restockModal')" class="text-gray-400 hover:text-[#2D241E] hover:bg-[#FDF8F1] p-2 rounded-xl transition-colors">✕</button>
         </div>
-        <div class="bg-[#FDF8F1] border border-[#F3E9DC] rounded-2xl p-4 flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-            <div id="rIcon" class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center text-xl sm:text-2xl shadow-sm shrink-0"></div>
+        <div class="bg-[#FDF8F1] border border-[#F3E9DC] rounded-2xl p-4 flex items-center gap-4 mb-5 sm:mb-6">
+            <div id="rIcon" class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm overflow-hidden shrink-0"></div>
             <div>
                 <div id="rName" class="font-bold text-[#2D241E] text-sm sm:text-base"></div>
                 <div id="rCur" class="text-xs text-gray-500 mt-1"></div>
@@ -213,8 +211,8 @@
                 <input id="rQty" type="number" placeholder="Enter quantity" min="1" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
             </div>
             <div>
-                <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Reason / Supplier</label>
-                <input id="rNote" type="text" placeholder="e.g. Supplier delivery" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Supplier / Note</label>
+                <input id="rNote" type="text" placeholder="e.g. Royal Canin PH" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
             </div>
         </div>
         <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
@@ -227,347 +225,340 @@
 <div id="toast" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-xl font-bold text-xs sm:text-sm transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3"></div>
 
 <script>
-/* ─── DATA ─── */
-const CAT_EMOJI  = {Food:'🍖',Toys:'🎾',Accessories:'🏷️',Health:'💊',Pets:'🐾'};
-const CAT_CLASS  = {
-    Food:'bg-[#FEF9C3] text-[#854D0E]',
-    Toys:'bg-[#FCE7F3] text-[#9D174D]',
-    Accessories:'bg-[#EDE9FE] text-[#5B21B6]',
-    Health:'bg-[#E9F0FE] text-[#1E3A8A]',
-    Pets:'bg-[#E9F7F2] text-[#166534]'
-};
-const CAT_BAR    = {
-    Food:'bg-[#F59E0B]', 
-    Toys:'bg-[#EC4899]',
-    Accessories:'bg-[#8B5CF6]', 
-    Health:'bg-[#3B82F6]', 
-    Pets:'bg-[#22C55E]'
-};
+    const API  = '/api/v1';
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-let inventory = [
-  {id:1,name:'Premium Leash',     sku:'ACC-001',category:'Accessories',stock:10,price:850, thresh:5},
-  {id:2,name:'Salmon Cat Food',   sku:'FD-001', category:'Food',       stock:3, price:320, thresh:10},
-  {id:3,name:'Squeaky Ball',      sku:'TY-001', category:'Toys',       stock:25,price:150, thresh:5},
-  {id:4,name:'Vitamin Drops',     sku:'HL-001', category:'Health',     stock:0, price:480, thresh:5},
-  {id:5,name:'Dog Shampoo',       sku:'HL-002', category:'Health',     stock:8, price:210, thresh:5},
-  {id:6,name:'Catnip Spray',      sku:'FD-002', category:'Food',       stock:4, price:195, thresh:8},
-  {id:7,name:'Hamster Wheel',     sku:'TY-002', category:'Toys',       stock:12,price:380, thresh:4},
-  {id:8,name:'Persian Kitten',    sku:'PT-001', category:'Pets',       stock:2, price:4500,thresh:1},
-  {id:9,name:'Collar — Red Plaid',sku:'ACC-002',category:'Accessories',stock:0, price:290, thresh:5},
-];
-let nextId = 10;
-let editId = null;
-let restockId = null;
-let activity = [];
+    const CAT_EMOJI = { Food:'🍖', Toys:'🎾', Accessories:'🎀', Health:'💊', Grooming:'🪮' };
+    const CAT_CLASS = { Food:'bg-[#FEF9C3] text-[#854D0E]', Toys:'bg-[#FCE7F3] text-[#9D174D]', Accessories:'bg-[#EDE9FE] text-[#5B21B6]', Health:'bg-[#E9F0FE] text-[#1E3A8A]', Grooming:'bg-[#E9F7F2] text-[#166534]' };
+    const CAT_BAR   = { Food:'bg-[#F59E0B]', Toys:'bg-[#EC4899]', Accessories:'bg-[#8B5CF6]', Health:'bg-[#3B82F6]', Grooming:'bg-[#22C55E]' };
 
-/* ─── IMAGE PREVIEW HELPER ─── */
-function previewImage(input) {
-    const preview = document.getElementById('imagePreview');
-    const placeholder = document.getElementById('previewPlaceholder');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            placeholder.classList.add('hidden');
+    let inventory = [];
+    let editId    = null;
+    let restockId = null;
+
+    // ── Fetch from API ────────────────────────────────────────
+    async function loadInventory() {
+        try {
+            const q      = document.getElementById('searchQ').value;
+            const cat    = document.getElementById('filterCat').value;
+            const status = document.getElementById('filterStatus').value;
+            const params = new URLSearchParams({ q, category: cat, status });
+            const res    = await fetch(`${API}/supplies?${params}`);
+            inventory    = await res.json();
+            renderTable();
+        } catch (e) {
+            document.getElementById('tbody').innerHTML =
+                '<tr><td colspan="6" class="text-center py-12 text-red-400 text-sm">Failed to load supplies.</td></tr>';
         }
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = "#";
-        preview.classList.add('hidden');
-        placeholder.classList.remove('hidden');
     }
-}
 
-/* ─── STATUS HELPERS ─── */
-function status(item){
-  if(item.stock===0) return 'out';
-  if(item.stock<=item.thresh) return 'low';
-  return 'ok';
-}
-function statusBadge(item){
-  const s = status(item);
-  const labels = {ok:'In Stock', low:'Low Stock', out:'Out of Stock'};
-  const classes = {
-      ok: 'bg-[#E9F7F2] text-[#166534]',
-      low:'bg-[#FFF8E1] text-[#92400E]',
-      out:'bg-[#FEE2E2] text-[#991B1B]'
-  };
-  const dots = {ok:'bg-[#22C55E]', low:'bg-[#F59E0B]', out:'bg-[#EF4444]'};
-  
-  return `<span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${classes[s]}">
-            <span class="w-1.5 h-1.5 rounded-full ${dots[s]}"></span>
-            ${labels[s]}
-          </span>`;
-}
+    // ── Render ────────────────────────────────────────────────
+    function renderTable() {
+        const tbody = document.getElementById('tbody');
+        let rows = '', count = 0;
 
-/* ─── RENDER TABLE ─── */
-function renderTable(){
-  const q   = document.getElementById('searchQ').value.toLowerCase();
-  const cat = document.getElementById('filterCat').value;
-  const st  = document.getElementById('filterStatus').value;
-  const tbody= document.getElementById('tbody');
-  let rows='', count=0;
+        inventory.forEach(item => {
+            count++;
+            const em  = CAT_EMOJI[item.category] || '📦';
+            const val = (item.stock * item.price).toLocaleString('en-PH', { minimumFractionDigits: 0 });
+            const imgHtml = item.image
+                ? `<img src="${item.image}" class="w-full h-full object-cover">`
+                : `<span class="text-base sm:text-xl">${em}</span>`;
 
-  inventory.forEach(item=>{
-    const s=status(item);
-    if(q && !item.name.toLowerCase().includes(q) && !item.sku.toLowerCase().includes(q)) return;
-    if(cat && item.category!==cat) return;
-    if(st && s!==st) return;
-    count++;
-    const em=CAT_EMOJI[item.category]||'📦';
-    const val=(item.stock*item.price).toLocaleString('en-PH',{minimumFractionDigits:0});
-    
-    rows+=`
-    <tr class="hover:bg-[#FDF8F1]/60 transition-colors group">
-      <td class="px-4 sm:px-6 py-3 sm:py-4">
-        <div class="flex items-center gap-2 sm:gap-4">
-          <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#FDF8F1] border border-[#F3E9DC] flex items-center justify-center text-base sm:text-xl shrink-0">${em}</div>
-          <div>
-            <div class="font-bold text-[#2D241E] text-xs sm:text-sm">${item.name}</div>
-            <div class="text-[10px] text-gray-400 font-mono mt-0.5">${item.sku}</div>
-          </div>
-        </div>
-      </td>
-      <td class="px-4 sm:px-6 py-3 sm:py-4">
-        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${CAT_CLASS[item.category]}">${em} <span class="hidden sm:inline">${item.category}</span></span>
-      </td>
-      <td class="px-4 sm:px-6 py-3 sm:py-4">${statusBadge(item)}</td>
-      <td class="px-4 sm:px-6 py-3 sm:py-4">
-        <div class="flex items-center gap-1 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl p-1 w-fit">
-          <button class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg text-[#991B1B] hover:bg-[#FEE2E2] font-bold transition-colors" onclick="adjustStock(${item.id},-1)">−</button>
-          <span class="text-xs sm:text-sm font-bold text-[#2D241E] w-6 sm:w-8 text-center" id="qty-${item.id}">${item.stock}</span>
-          <button class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg text-[#166534] hover:bg-[#E9F7F2] font-bold transition-colors" onclick="adjustStock(${item.id},+1)">+</button>
-        </div>
-      </td>
-      <td class="px-4 sm:px-6 py-3 sm:py-4">
-        <div class="font-bold text-xs sm:text-sm text-[#2D241E]">₱${item.price.toLocaleString('en-PH',{minimumFractionDigits:2})}</div>
-        <div class="text-[10px] text-gray-400 mt-0.5">Val: ₱${val}</div>
-      </td>
-      <td class="px-4 sm:px-6 py-3 sm:py-4 text-right whitespace-nowrap">
-        <div class="flex items-center justify-end gap-1 sm:gap-2">
-          <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-[#F3E9DC]/50 text-gray-600 hover:bg-[#EBD7BC] transition-colors" onclick="openEditModal(${item.id})">Edit</button>
-          <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-[#FDF2E9] text-[#E68A39] hover:bg-[#FCE1CC] transition-colors" onclick="openRestockModal(${item.id})">Restock</button>
-          <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" onclick="deleteItem(${item.id})">Delete</button>
-        </div>
-      </td>
-    </tr>`;
-  });
+            rows += `
+            <tr class="hover:bg-[#FDF8F1]/60 transition-colors group">
+              <td class="px-4 sm:px-6 py-3 sm:py-4">
+                <div class="flex items-center gap-2 sm:gap-4">
+                  <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#FDF8F1] border border-[#F3E9DC] flex items-center justify-center shrink-0 overflow-hidden">${imgHtml}</div>
+                  <div>
+                    <div class="font-bold text-[#2D241E] text-xs sm:text-sm">${item.name}</div>
+                    <div class="text-[10px] text-gray-400 font-mono mt-0.5">${item.sku ?? ''}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 sm:px-6 py-3 sm:py-4">
+                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${CAT_CLASS[item.category] ?? 'bg-gray-100 text-gray-500'}">${em} <span class="hidden sm:inline">${item.category}</span></span>
+              </td>
+              <td class="px-4 sm:px-6 py-3 sm:py-4">${_statusBadge(item.status)}</td>
+              <td class="px-4 sm:px-6 py-3 sm:py-4">
+                <div class="flex items-center gap-1 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl p-1 w-fit">
+                  <button class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg text-[#991B1B] hover:bg-[#FEE2E2] font-bold" onclick="adjustStock(${item.id},-1)">−</button>
+                  <span class="text-xs sm:text-sm font-bold text-[#2D241E] w-6 sm:w-8 text-center" id="qty-${item.id}">${item.stock}</span>
+                  <button class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg text-[#166534] hover:bg-[#E9F7F2] font-bold" onclick="adjustStock(${item.id},+1)">+</button>
+                </div>
+              </td>
+              <td class="px-4 sm:px-6 py-3 sm:py-4">
+                <div class="font-bold text-xs sm:text-sm text-[#2D241E]">₱${parseFloat(item.price).toLocaleString('en-PH',{minimumFractionDigits:2})}</div>
+                <div class="text-[10px] text-gray-400 mt-0.5">Val: ₱${val}</div>
+              </td>
+              <td class="px-4 sm:px-6 py-3 sm:py-4 text-right whitespace-nowrap">
+                <div class="flex items-center justify-end gap-1 sm:gap-2">
+                  <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-[#F3E9DC]/50 text-gray-600 hover:bg-[#EBD7BC]" onclick="openEditModal(${item.id})">Edit</button>
+                  <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-[#FDF2E9] text-[#E68A39] hover:bg-[#FCE1CC]" onclick="openRestockModal(${item.id})">Restock</button>
+                  <button class="px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold rounded-xl bg-red-50 text-red-500 hover:bg-red-100" onclick="deleteItem(${item.id})">Delete</button>
+                </div>
+              </td>
+            </tr>`;
+        });
 
-  tbody.innerHTML = rows;
-  document.getElementById('emptyMsg').classList.toggle('hidden', count > 0);
-  updateStats();
-  updateBreakdown();
-  updateRestockList();
-}
+        tbody.innerHTML = rows;
+        document.getElementById('emptyMsg').classList.toggle('hidden', count > 0);
+        updateStats();
+        updateBreakdown();
+        updateRestockList();
+    }
 
-/* ─── STATS ─── */
-function updateStats(){
-  const total=inventory.reduce((s,i)=>s+i.stock*i.price,0);
-  const units=inventory.reduce((s,i)=>s+i.stock,0);
-  const lows =inventory.filter(i=>status(i)!=='ok').length;
-  document.getElementById('statSku').textContent=inventory.length;
-  document.getElementById('statUnits').textContent=units.toLocaleString();
-  document.getElementById('statLow').textContent=lows;
-  document.getElementById('statVal').textContent='₱'+total.toLocaleString('en-PH',{minimumFractionDigits:0});
+    function _statusBadge(s) {
+        const labels  = { ok:'In Stock', low:'Low Stock', out:'Out of Stock' };
+        const classes = { ok:'bg-[#E9F7F2] text-[#166534]', low:'bg-[#FFF8E1] text-[#92400E]', out:'bg-[#FEE2E2] text-[#991B1B]' };
+        const dots    = { ok:'bg-[#22C55E]', low:'bg-[#F59E0B]', out:'bg-[#EF4444]' };
+        return `<span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${classes[s]}"><span class="w-1.5 h-1.5 rounded-full ${dots[s]}"></span>${labels[s]}</span>`;
+    }
 
-  const outItems=inventory.filter(i=>i.stock===0).map(i=>i.name);
-  const lowItems=inventory.filter(i=>status(i)==='low').map(i=>i.name);
-  const banner=document.getElementById('alertBanner');
-  const alertTxt=document.getElementById('alertText');
-  if(outItems.length||lowItems.length){
-    banner.classList.remove('hidden');
-    let msg='';
-    if(outItems.length) msg+=`<span class="font-extrabold">Out of stock:</span> ${outItems.join(', ')}. `;
-    if(lowItems.length) msg+=`<span class="font-extrabold">Low stock:</span> ${lowItems.join(', ')}.`;
-    alertTxt.innerHTML=msg;
-  } else {
-    banner.classList.add('hidden');
-  }
-}
+    function updateStats() {
+        const total = inventory.reduce((s,i) => s + i.stock * i.price, 0);
+        const units = inventory.reduce((s,i) => s + i.stock, 0);
+        const lows  = inventory.filter(i => i.status !== 'ok').length;
+        document.getElementById('statSku').textContent   = inventory.length;
+        document.getElementById('statUnits').textContent = units.toLocaleString();
+        document.getElementById('statLow').textContent   = lows;
+        document.getElementById('statVal').textContent   = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 0 });
 
-/* ─── CATEGORY BREAKDOWN ─── */
-function updateBreakdown(){
-  const counts={};
-  inventory.forEach(i=>{ counts[i.category]=(counts[i.category]||0)+i.stock; });
-  const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
-  const cats=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('breakdownTotal').textContent=`${total} units`;
-  document.getElementById('catBreakdown').innerHTML=cats.map(([cat,cnt])=>`
-    <div class="flex items-center gap-2 sm:gap-3">
-      <div class="text-xs sm:text-sm font-bold text-[#5C4D3C] w-20 sm:w-24 flex shrink-0 items-center gap-1 sm:gap-2">${CAT_EMOJI[cat]} ${cat}</div>
-      <div class="flex-1 h-2 sm:h-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-full overflow-hidden">
-        <div class="h-full rounded-full transition-all duration-500 ${CAT_BAR[cat]}" style="width:${(cnt/total*100).toFixed(1)}%"></div>
-      </div>
-      <div class="text-xs font-bold text-gray-400 w-6 sm:w-8 text-right">${cnt}</div>
-    </div>`).join('');
-}
+        const outItems = inventory.filter(i => i.status === 'out').map(i => i.name);
+        const lowItems = inventory.filter(i => i.status === 'low').map(i => i.name);
+        const banner   = document.getElementById('alertBanner');
+        if (outItems.length || lowItems.length) {
+            banner.style.display = '';
+            let msg = '';
+            if (outItems.length) msg += `<strong>Out of stock:</strong> ${outItems.join(', ')}. `;
+            if (lowItems.length) msg += `<strong>Low stock:</strong> ${lowItems.join(', ')}.`;
+            document.getElementById('alertText').innerHTML = msg;
+        } else {
+            banner.style.display = 'none';
+        }
+    }
 
-/* ─── ACTIVITY FEED ─── */
-function renderActivity(){
-  const activityFeedEl = document.getElementById('activityFeed');
-  if(!activityFeedEl) return;
-  const icons={in:'➕',out:'🛍️',edit:'✏️'};
-  const fdClass={in:'bg-[#E9F7F2] text-[#166534]',out:'bg-[#FEE2E2] text-[#991B1B]',edit:'bg-[#E9F0FE] text-[#1E3A8A]'};
-  activityFeedEl.innerHTML=activity.slice(0,5).map(a=>`
-    <div class="flex items-start gap-3 pb-4 border-b border-[#FDF8F1] last:border-0 last:pb-0">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 ${fdClass[a.type]}">${icons[a.type]}</div>
-      <div>
-        <div class="text-sm font-bold text-[#2D241E]">${a.msg}</div>
-        <div class="text-[10px] text-gray-400 uppercase tracking-wide mt-1">${a.time}</div>
-      </div>
-    </div>`).join('');
-}
+    function updateBreakdown() {
+        const counts = {};
+        inventory.forEach(i => { counts[i.category] = (counts[i.category] || 0) + i.stock; });
+        const total = Object.values(counts).reduce((a,b) => a+b, 0) || 1;
+        const cats  = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+        document.getElementById('breakdownTotal').textContent = `${total} units`;
+        document.getElementById('catBreakdown').innerHTML = cats.map(([cat,cnt]) => `
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="text-xs sm:text-sm font-bold text-[#5C4D3C] w-20 sm:w-24 flex shrink-0 items-center gap-1 sm:gap-2">${CAT_EMOJI[cat] ?? '📦'} ${cat}</div>
+                <div class="flex-1 h-2 sm:h-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500 ${CAT_BAR[cat] ?? 'bg-gray-400'}" style="width:${(cnt/total*100).toFixed(1)}%"></div>
+                </div>
+                <div class="text-xs font-bold text-gray-400 w-6 sm:w-8 text-right">${cnt}</div>
+            </div>`).join('');
+    }
 
-/* ─── RESTOCK LIST ─── */
-function updateRestockList(){
-  const need=inventory.filter(i=>status(i)!=='ok').slice(0,4);
-  if(!need.length){
-    document.getElementById('restockList').innerHTML=`<p class="text-xs sm:text-sm text-gray-400 text-center py-4 bg-[#FDF8F1] rounded-2xl border border-[#F3E9DC]">✅ All items are well-stocked!</p>`;
-    return;
-  }
-  document.getElementById('restockList').innerHTML=need.map(item=>`
-    <div class="flex items-center justify-between py-3 border-b border-[#FDF8F1] last:border-0">
-      <div>
-        <div class="text-xs sm:text-sm font-bold text-[#2D241E]">${item.name}</div>
-        <div class="text-[10px] ${status(item)==='out'?'text-red-500':'text-[#E68A39]'} font-medium mt-0.5">${status(item)==='out'?'Out of stock':'Only '+item.stock+' left'}</div>
-      </div>
-      <button class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#FDF2E9] text-[#E68A39] text-[10px] sm:text-xs font-bold hover:bg-[#FCE1CC] transition-colors shrink-0" onclick="openRestockModal(${item.id})">Restock</button>
-    </div>`).join('');
-}
+    function updateRestockList() {
+        const need = inventory.filter(i => i.status !== 'ok').slice(0,4);
+        if (!need.length) {
+            document.getElementById('restockList').innerHTML = `<p class="text-sm text-gray-400 text-center py-4 bg-[#FDF8F1] rounded-2xl border border-[#F3E9DC]">✅ All items are well-stocked!</p>`;
+            return;
+        }
+        document.getElementById('restockList').innerHTML = need.map(item => `
+            <div class="flex items-center justify-between py-3 border-b border-[#FDF8F1] last:border-0">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FDF8F1] border border-[#F3E9DC] overflow-hidden flex items-center justify-center text-xs">
+                        ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover">` : (CAT_EMOJI[item.category] ?? '📦')}
+                    </div>
+                    <div>
+                        <div class="text-xs sm:text-sm font-bold text-[#2D241E]">${item.name}</div>
+                        <div class="text-[10px] ${item.status==='out'?'text-red-500':'text-[#E68A39]'} font-bold mt-0.5 uppercase">${item.status==='out'?'Out of Stock':'Low Stock'}</div>
+                    </div>
+                </div>
+                <button class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#FDF2E9] text-[#E68A39] text-[10px] sm:text-xs font-bold hover:bg-[#FCE1CC]" onclick="openRestockModal(${item.id})">Restock</button>
+            </div>`).join('');
+    }
 
-/* ─── STOCK ADJUST ─── */
-function adjustStock(id, delta){
-  const item=inventory.find(i=>i.id===id);
-  if(!item) return;
-  const newVal=Math.max(0,item.stock+delta);
-  item.stock=newVal;
-  const el=document.getElementById('qty-'+id);
-  if(el) el.textContent=newVal;
-  activity.unshift({type:delta>0?'in':'out',
-    msg:`${delta>0?'Added':'Removed'} 1 unit: ${item.name}`,time:'Just now'});
-  renderTable();
-  renderActivity();
-  showToast(`${item.name} stock: ${newVal}`, delta > 0 ? 'success' : 'error');
-}
+    // ── Stock Adjust ──────────────────────────────────────────
+    async function adjustStock(id, delta) {
+        try {
+            const res  = await fetch(`${API}/supplies/${id}/stock`, {
+                method:  'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body:    JSON.stringify({ delta }),
+            });
+            const data = await res.json();
+            const item = inventory.find(i => i.id === id);
+            if (item) { item.stock = data.stock; item.status = data.status; }
+            renderTable();
+        } catch (e) { showToast('Failed to update stock.', 'error'); }
+    }
 
-/* ─── ADD ITEM MODAL ─── */
-function openAddModal(){
-  editId=null;
-  document.getElementById('modalTitle').textContent='Add New Item';
-  ['mName','mSku','mStock','mPrice','mImage'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('mCat').value='';
-  document.getElementById('mThresh').value='5';
-  document.getElementById('imagePreview').classList.add('hidden');
-  document.getElementById('previewPlaceholder').classList.remove('hidden');
-  const m = document.getElementById('itemModal');
-  m.classList.remove('hidden'); m.classList.add('flex');
-}
-function openEditModal(id){
-  const item=inventory.find(i=>i.id===id);
-  if(!item) return;
-  editId=id;
-  document.getElementById('modalTitle').textContent='Edit Item';
-  document.getElementById('mName').value=item.name;
-  document.getElementById('mSku').value=item.sku;
-  document.getElementById('mCat').value=item.category;
-  document.getElementById('mStock').value=item.stock;
-  document.getElementById('mPrice').value=item.price;
-  document.getElementById('mThresh').value=item.thresh;
-  const m = document.getElementById('itemModal');
-  m.classList.remove('hidden'); m.classList.add('flex');
-}
-function saveItem(){
-  const name=document.getElementById('mName').value.trim();
-  const sku =document.getElementById('mSku').value.trim();
-  const cat =document.getElementById('mCat').value;
-  const stock=parseInt(document.getElementById('mStock').value)||0;
-  const price=parseFloat(document.getElementById('mPrice').value)||0;
-  const thresh=parseInt(document.getElementById('mThresh').value)||5;
-  if(!name||!cat){ showToast('Please fill in name and category.','error'); return; }
-  if(editId){
-    const item=inventory.find(i=>i.id===editId);
-    Object.assign(item,{name,sku,category:cat,stock,price,thresh});
-    activity.unshift({type:'edit',msg:`Updated: ${name}`,time:'Just now'});
-    showToast(`"${name}" updated.`,'success');
-  } else {
-    inventory.push({id:nextId++,name,sku:sku||`NEW-${nextId}`,category:cat,stock,price,thresh});
-    activity.unshift({type:'in',msg:`Added new item: ${name}`,time:'Just now'});
-    showToast(`"${name}" added to inventory.`,'success');
-  }
-  closeModal('itemModal');
-  renderTable();
-  renderActivity();
-}
+    // ── Add / Edit ────────────────────────────────────────────
+    function openAddModal() {
+        editId = null;
+        document.getElementById('modalTitle').textContent = 'Add New Item';
+        ['mName','mSku','mStock','mPrice','mThresh'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('mCat').value = '';
+        document.getElementById('imagePreview').classList.add('hidden');
+        document.getElementById('imagePreview').src = '#';
+        document.getElementById('previewPlaceholder').classList.remove('hidden');
+        document.getElementById('itemModal').classList.replace('hidden','flex');
+    }
 
-/* ─── RESTOCK MODAL ─── */
-function openRestockModal(id){
-  const item=inventory.find(i=>i.id===id);
-  if(!item) return;
-  restockId=id;
-  document.getElementById('rIcon').textContent=CAT_EMOJI[item.category]||'📦';
-  document.getElementById('rName').textContent=item.name;
-  document.getElementById('rCur').textContent=`Current stock: ${item.stock} units · Threshold: ${item.thresh}`;
-  document.getElementById('rQty').value='';
-  document.getElementById('rNote').value='';
-  const m = document.getElementById('restockModal');
-  m.classList.remove('hidden'); m.classList.add('flex');
-}
-function confirmRestock(){
-  const item=inventory.find(i=>i.id===restockId);
-  if(!item) return;
-  const qty=parseInt(document.getElementById('rQty').value)||0;
-  if(qty<=0){ showToast('Enter a valid quantity.','error'); return; }
-  const note=document.getElementById('rNote').value.trim();
-  item.stock+=qty;
-  activity.unshift({type:'in',
-    msg:`Restocked ${item.name} (+${qty})${note?' — '+note:''}`,time:'Just now'});
-  closeModal('restockModal');
-  renderTable();
-  renderActivity();
-  showToast(`✅ ${item.name} restocked by ${qty} units.`,'success');
-}
+    function openEditModal(id) {
+        const item = inventory.find(i => i.id === id);
+        if (!item) return;
+        editId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Item';
+        document.getElementById('mName').value   = item.name;
+        document.getElementById('mSku').value    = item.sku ?? '';
+        document.getElementById('mCat').value    = item.category;
+        document.getElementById('mStock').value  = item.stock;
+        document.getElementById('mPrice').value  = item.price;
+        document.getElementById('mThresh').value = item.thresh;
+        if (item.image) {
+            document.getElementById('imagePreview').src = item.image;
+            document.getElementById('imagePreview').classList.remove('hidden');
+            document.getElementById('previewPlaceholder').classList.add('hidden');
+        } else {
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('previewPlaceholder').classList.remove('hidden');
+        }
+        document.getElementById('itemModal').classList.replace('hidden','flex');
+    }
 
-/* ─── HELPERS ─── */
-function deleteItem(id){
-  const item=inventory.find(i=>i.id===id);
-  if(!item||!confirm(`Remove "${item.name}" from inventory?`)) return;
-  inventory=inventory.filter(i=>i.id!==id);
-  activity.unshift({type:'out',msg:`Removed: ${item.name}`,time:'Just now'});
-  renderTable(); renderActivity();
-  showToast(`"${item.name}" removed.`,'success');
-}
-function closeModal(id){
-  const m = document.getElementById(id);
-  m.classList.add('hidden'); m.classList.remove('flex');
-  editId=null; restockId=null;
-}
-function showToast(msg,type='success'){
-  const t=document.getElementById('toast');
-  t.innerHTML = `<span class="text-base sm:text-xl">${type === 'success' ? '✅' : '⚠️'}</span> <span>${msg}</span>`; 
-  if(type === 'success') {
-      t.className = `fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#34A853] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-xl font-bold text-xs sm:text-sm transform transition-all duration-300 flex items-center gap-3`;
-  } else {
-      t.className = `fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#EF4444] text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-xl font-bold text-xs sm:text-sm transform transition-all duration-300 flex items-center gap-3`;
-  }
-  requestAnimationFrame(() => { t.classList.remove('translate-y-10', 'opacity-0'); });
-  setTimeout(()=>{ t.classList.add('translate-y-10', 'opacity-0'); }, 3000);
-}
-function exportCSV(){
-  const header='Name,SKU,Category,Stock,Price,Status\n';
-  const rows=inventory.map(i=>`"${i.name}","${i.sku}","${i.category}",${i.stock},${i.price},"${status(i)}"`).join('\n');
-  const blob=new Blob([header+rows],{type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='inventory.csv'; a.click();
-}
+    function previewImage(input) {
+        const preview     = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('previewPlaceholder');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-['itemModal','restockModal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',function(e){
-    if(e.target===this) closeModal(id);
-  });
-});
+    async function saveItem() {
+        const name   = document.getElementById('mName').value.trim();
+        const cat    = document.getElementById('mCat').value;
+        const stock  = parseInt(document.getElementById('mStock').value) || 0;
+        const price  = parseFloat(document.getElementById('mPrice').value) || 0;
+        const thresh = parseInt(document.getElementById('mThresh').value) || 5;
+        const sku    = document.getElementById('mSku').value.trim();
 
-renderTable();
-renderActivity();
+        if (!name || !cat) { showToast('Name and category are required.', 'error'); return; }
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.innerText = 'Saving…';
+
+        const form = new FormData();
+        form.append('name', name);
+        form.append('category', cat);
+        form.append('stock', stock);
+        form.append('price', price);
+        form.append('low_stock_threshold', thresh);
+        if (sku) form.append('sku', sku);
+        const fileInput = document.getElementById('mImage');
+        if (fileInput.files[0]) form.append('image', fileInput.files[0]);
+        if (editId) form.append('_method', 'PUT');
+
+        try {
+            const url = editId ? `${API}/supplies/${editId}` : `${API}/supplies`;
+            const res = await fetch(url, {
+                method:  'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF },
+                body:    form,
+            });
+            if (!res.ok) throw new Error(await res.text());
+
+            showToast(editId ? 'Item updated!' : 'Item added!');
+            closeModal('itemModal');
+            await loadInventory();
+        } catch (e) {
+            showToast('Could not save item. Check for duplicate SKU.', 'error');
+        } finally {
+            btn.disabled = false; btn.innerText = 'Save Item';
+        }
+    }
+
+    // ── Restock ───────────────────────────────────────────────
+    function openRestockModal(id) {
+        const item = inventory.find(i => i.id === id);
+        if (!item) return;
+        restockId = id;
+        const em = CAT_EMOJI[item.category] || '📦';
+        document.getElementById('rIcon').innerHTML = item.image
+            ? `<img src="${item.image}" class="w-full h-full object-cover">`
+            : em;
+        document.getElementById('rName').textContent = item.name;
+        document.getElementById('rCur').textContent  = `Stock: ${item.stock} · Alert at: ${item.thresh}`;
+        document.getElementById('rQty').value  = '';
+        document.getElementById('rNote').value = '';
+        document.getElementById('restockModal').classList.replace('hidden','flex');
+    }
+
+    async function confirmRestock() {
+        const item = inventory.find(i => i.id === restockId);
+        if (!item) return;
+        const qty = parseInt(document.getElementById('rQty').value) || 0;
+        if (qty <= 0) { showToast('Enter a valid quantity.', 'error'); return; }
+
+        try {
+            const res  = await fetch(`${API}/supplies/${restockId}/restock`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body:    JSON.stringify({ qty }),
+            });
+            const data = await res.json();
+            item.stock = data.stock;
+            closeModal('restockModal');
+            renderTable();
+            showToast(`✅ Restocked ${qty}× ${item.name}.`);
+        } catch (e) { showToast('Failed to restock.', 'error'); }
+    }
+
+    // ── Delete ────────────────────────────────────────────────
+    async function deleteItem(id) {
+        const item = inventory.find(i => i.id === id);
+        if (!item || !confirm(`Remove "${item.name}" from inventory?`)) return;
+        try {
+            await fetch(`${API}/supplies/${id}`, {
+                method:  'DELETE',
+                headers: { 'X-CSRF-TOKEN': CSRF },
+            });
+            inventory = inventory.filter(i => i.id !== id);
+            renderTable();
+            showToast(`"${item.name}" removed.`);
+        } catch (e) { showToast('Failed to delete item.', 'error'); }
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.replace('flex','hidden');
+        editId = null; restockId = null;
+    }
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.innerHTML = `<span>${type==='success'?'✅':'⚠️'}</span> <span>${msg}</span>`;
+        t.className = `fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 ${type==='success'?'bg-[#34A853]':'bg-[#EF4444]'} text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-xl font-bold text-xs sm:text-sm transform transition-all duration-300 flex items-center gap-3`;
+        requestAnimationFrame(() => { t.classList.remove('translate-y-10','opacity-0'); });
+        setTimeout(() => { t.classList.add('translate-y-10','opacity-0'); }, 3000);
+    }
+
+    function exportCSV() {
+        const header = 'Product,SKU,Category,Stock,Price\n';
+        const rows   = inventory.map(i => `"${i.name}","${i.sku??''}","${i.category}",${i.stock},${i.price}`).join('\n');
+        const blob   = new Blob([header+rows], { type:'text/csv' });
+        const a      = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download   = 'supplies-inventory.csv'; a.click();
+    }
+
+    ['itemModal','restockModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) closeModal(id);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', loadInventory);
 </script>
 @endsection

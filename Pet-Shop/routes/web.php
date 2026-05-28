@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Controllers
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\Customer\OrderTrackingController;
-
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,57 +16,63 @@ use App\Http\Controllers\Customer\OrderTrackingController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Auth Routes
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+// ── Authentication ───────────────────────────────────────────────────────
+Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-/*
-|--------------------------------------------------------------------------
-| Admin Routes
-|--------------------------------------------------------------------------
-*/
-Route::prefix('admin')->group(function () {
-    
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    });
+// ── Registration (NEW) ───────────────────────────────────────────────────
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 
-    Route::get('/inventory', function () {
-        return view('admin.inventory');
-    });
+// ── Public / Storefront ──────────────────────────────────────────────────
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/supplies', function () {
-        return view('admin.supplies');
-    });
+Route::get('/shop',          [ShopController::class, 'index'])->name('shop');
+Route::post('/shop/checkout', [ShopController::class, 'placeOrder'])->name('shop.checkout');
+Route::get('/shop/success',   [ShopController::class, 'success'])->name('order.success');
 
-    Route::get('/services', function () {
-        return view('admin.services');
-    });
+// ── OTP Endpoints (no auth required — public) ────────────────────────────
+Route::post('/shop/otp/send',   [ShopController::class, 'sendOtp'])->name('shop.otp.send');
+Route::post('/shop/otp/verify', [ShopController::class, 'verifyOtp'])->name('shop.otp.verify');
 
-    // Fixed: Now matches /admin/orders
-    Route::get('/orders', function () {
-        return view('admin.orders'); 
-    });
+// ── Order Tracking (Public) ──────────────────────────────────────────────
+Route::get('/track',          [OrderTrackingController::class, 'form'])->name('order.track.form');
+Route::post('/track/search',  [OrderTrackingController::class, 'search'])->name('order.track.search');
+Route::post('/track/ajax',    [OrderTrackingController::class, 'ajaxSearch'])->name('order.track.ajax');
+Route::get('/track/{number}', [OrderTrackingController::class, 'result'])->name('order.track.result');
+// Contact form (both guest + auth)
+Route::post('/contact', [App\Http\Controllers\ContactController::class, 'send'])
+     ->name('contact.send');
+// 3D Customizer
+Route::get('/shop/3d', function () { return view('customer.3d-customizer'); })->name('shop.3d')->middleware('auth');
+// Order history
+Route::get('/shop/orders', function () { return view('customer.order-history'); })->name('shop.orders')->middleware('auth');
 
-    Route::get('/inquiries', function () {
-        return view('admin.messages');
-    });
-
+// Customer messaging (auth only)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/my-messages',      [App\Http\Controllers\ContactController::class, 'myMessages'])
+         ->name('my.messages');
+    Route::post('/api/my-messages/send',[App\Http\Controllers\ContactController::class, 'myMessageSend'])
+         ->name('my.messages.send');
 });
-
 /*
 |--------------------------------------------------------------------------
-| Customer Routes
+| Admin Routes (Secured — auth middleware)
 |--------------------------------------------------------------------------
 */
-Route::prefix('customer')->group(function () {
-    
-    Route::get('/shop', [ShopController::class, 'index'])->name('customer.shop');
-    Route::get('/track-order', [OrderTrackingController::class, 'showForm'])->name('order.track');
-    Route::post('/track-order', [OrderTrackingController::class, 'track'])->name('order.track.search');
-    Route::post('/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
-    Route::get('/checkout/success', [ShopController::class, 'showSuccess'])->name('shop.success');
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
 
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Orders
+    Route::get('/orders',                   [AdminOrderController::class, 'index'])->name('orders');
+    Route::patch('/orders/{number}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
+    Route::get('/orders/export',            [AdminOrderController::class, 'exportCsv'])->name('orders.export');
+
+    // Static Blade pages (data fetched via JS/API)
+    Route::get('/inventory', fn() => view('admin.inventory'))->name('inventory');
+    Route::get('/supplies',  fn() => view('admin.supplies'))->name('supplies');
+    Route::get('/services',  fn() => view('admin.services'))->name('services');
+    Route::get('/messages',  fn() => view('admin.messages'))->name('messages');
 });

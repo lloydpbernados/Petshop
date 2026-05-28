@@ -2,25 +2,10 @@
 
 @section('content')
 <div class="min-h-screen bg-[#FDF8F1]">
-    {{-- Mock Data Logic --}}
-    @php
-        $orders = [
-            ['id' => 'PH-9921', 'status' => 'pending', 'customer' => 'Alice Rodriguez', 'date' => 'May 14, 2026', 'items' => [['name' => 'Premium Puppy Kibble', 'icon' => '🍖', 'qty' => 2, 'price' => 850], ['name' => 'Interactive Cat Wand', 'icon' => '🧶', 'qty' => 1, 'price' => 350]]],
-            ['id' => 'PH-9922', 'status' => 'pending', 'customer' => 'Roberto Gomez', 'date' => 'May 14, 2026', 'items' => [['name' => 'Self-Cleaning Litter Box', 'icon' => '📦', 'qty' => 1, 'price' => 4500]]],
-            ['id' => 'PH-9923', 'status' => 'pending', 'customer' => 'Elena Cruz', 'date' => 'May 14, 2026', 'items' => [['name' => 'Grooming Brush Set', 'icon' => '🪮', 'qty' => 1, 'price' => 1200], ['name' => 'Dog Shampoo', 'icon' => '🧴', 'qty' => 2, 'price' => 450]]],
-            ['id' => 'PH-9925', 'status' => 'to-ship', 'customer' => 'Mark Tee', 'date' => 'May 13, 2026', 'items' => [['name' => 'Orthopedic Dog Bed', 'icon' => '🛏️', 'qty' => 1, 'price' => 2200]]],
-            ['id' => 'PH-9926', 'status' => 'to-ship', 'customer' => 'Liza Soberano', 'date' => 'May 13, 2026', 'items' => [['name' => 'Hamster Exercise Wheel', 'icon' => '🎡', 'qty' => 1, 'price' => 650], ['name' => 'Hamster Pellets', 'icon' => '🐹', 'qty' => 3, 'price' => 150]]],
-            ['id' => 'PH-9927', 'status' => 'to-ship', 'customer' => 'Kevin Tan', 'date' => 'May 12, 2026', 'items' => [['name' => 'Large Aquarium Filter', 'icon' => '🐠', 'qty' => 1, 'price' => 3200]]],
-            ['id' => 'PH-9800', 'status' => 'completed', 'customer' => 'Sarah Jenkins', 'date' => 'May 10, 2026', 'items' => [['name' => 'Bird Cage Large', 'icon' => '🦜', 'qty' => 1, 'price' => 4500]]],
-        ];
-    @endphp
 
     {{-- Centered Custom Modal Popup --}}
     <div id="statusModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-        {{-- Backdrop --}}
         <div class="absolute inset-0 bg-[#2D241E]/50 backdrop-blur-sm" onclick="closeModal()"></div>
-        
-        {{-- Modal Content --}}
         <div class="relative bg-white rounded-4xl sm:rounded-[3rem] shadow-2xl p-8 sm:p-12 max-w-sm w-full border border-[#F3E9DC] transform transition-all scale-90 opacity-0 duration-300" id="modalContent">
             <div class="text-center">
                 <div class="inline-flex items-center justify-center w-16 h-16 sm:w-24 sm:h-24 bg-[#FDF8F1] rounded-full mb-5 sm:mb-6">
@@ -28,7 +13,6 @@
                 </div>
                 <h3 id="modalTitle" class="font-serif-brand text-2xl sm:text-3xl text-[#2D241E] mb-3 sm:mb-4">Success!</h3>
                 <p id="modalMessage" class="text-gray-500 mb-8 sm:mb-10 leading-relaxed text-sm">Action completed.</p>
-                
                 <button onclick="closeModal()" class="w-full bg-[#E68A39] text-white py-3 sm:py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#cf7b32] transition-all">
                     Understood
                 </button>
@@ -45,18 +29,19 @@
             </div>
             <p class="text-gray-500 text-sm sm:text-base">Track and manage customer purchases for supplies and pets.</p>
         </div>
-        <button onclick="showModal('📊', 'Exporting Data', 'Your orders report is being generated.')" class="bg-[#E68A39] text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold shadow-md hover:scale-105 transition-all text-sm w-fit">
+        <a href="{{ route('admin.orders.export') }}"
+           class="bg-[#E68A39] text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold shadow-md hover:scale-105 transition-all text-sm w-fit">
             Export CSV
-        </button>
+        </a>
     </div>
 
-    {{-- Tabs Navigation — scrollable on mobile --}}
+    {{-- Tabs Navigation --}}
     <div class="overflow-x-auto pb-px mb-6 sm:mb-8">
         <div class="flex gap-2 sm:gap-4 border-b border-[#F3E9DC] min-w-max">
             @foreach(['pending', 'to-ship', 'completed'] as $tab)
-                <button 
-                    onclick="filterOrders('{{ $tab }}')" 
-                    id="tab-{{ $tab }}" 
+                <button
+                    onclick="filterOrders('{{ $tab }}')"
+                    id="tab-{{ $tab }}"
                     class="tab-btn px-4 sm:px-6 py-3 sm:py-4 border-b-4 transition-all uppercase text-[10px] tracking-[0.2em] font-bold whitespace-nowrap
                     {{ $tab === 'pending' ? 'border-[#E68A39] text-[#E68A39]' : 'border-transparent text-gray-400' }}">
                     {{ str_replace('-', ' ', $tab) }}
@@ -67,32 +52,32 @@
 
     {{-- Orders Container --}}
     <div id="orders-container" class="space-y-5 sm:space-y-8 pb-24">
-        <!-- JS will render orders here -->
+        <!-- JS renders orders here -->
     </div>
 </div>
 
 <script>
-    // Initialize data from PHP
+    // Real data passed from AdminOrderController::index()
     let ordersList = @json($orders);
     let currentTab = 'pending';
 
     function renderOrders() {
         const container = document.getElementById('orders-container');
-        const filtered = ordersList.filter(o => o.status === currentTab);
-        
+        const filtered  = ordersList.filter(o => o.status === currentTab);
+
         if (filtered.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 sm:py-20 text-gray-400 font-bold uppercase tracking-widest text-xs">No ${currentTab} orders found</div>`;
+            container.innerHTML = `<div class="text-center py-16 sm:py-20 text-gray-400 font-bold uppercase tracking-widest text-xs">No ${currentTab.replace('-',' ')} orders found</div>`;
             return;
         }
 
         container.innerHTML = filtered.map(order => {
-            let grandTotal = order.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-            
+            const grandTotal = order.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+
             let actionBtn = '';
             if (order.status === 'pending') {
-                actionBtn = `<button onclick="processOrder('${order.id}', 'to-ship')" class="bg-[#2D241E] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-xs font-bold hover:bg-black transition-all shadow-lg">Approve Order</button>`;
+                actionBtn = `<button onclick="processOrder('${order.id}')" class="bg-[#2D241E] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-xs font-bold hover:bg-black transition-all shadow-lg">Approve Order</button>`;
             } else if (order.status === 'to-ship') {
-                actionBtn = `<button onclick="processOrder('${order.id}', 'completed')" class="bg-[#E68A39] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-xs font-bold transition-all shadow-lg shadow-orange-100">Ship Items</button>`;
+                actionBtn = `<button onclick="processOrder('${order.id}')" class="bg-[#E68A39] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-xs font-bold transition-all shadow-lg shadow-orange-100">Ship Items</button>`;
             } else {
                 actionBtn = `<div class="flex items-center gap-2 text-green-600"><span class="bg-green-100 p-1.5 rounded-full text-[8px]">✔</span><span class="text-[10px] font-bold uppercase tracking-widest">Delivered</span></div>`;
             }
@@ -136,17 +121,32 @@
         }).join('');
     }
 
-    function processOrder(id, newStatus) {
-        const orderIndex = ordersList.findIndex(o => o.id === id);
-        const customer = ordersList[orderIndex].customer;
-        ordersList[orderIndex].status = newStatus;
-        
-        renderOrders();
+    async function processOrder(orderNumber) {
+        try {
+            const res = await fetch(`/admin/orders/${orderNumber}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
 
-        if (newStatus === 'to-ship') {
-            showModal('🐕', 'Order Approved', `${customer}'s order is now ready for packing.`);
-        } else if (newStatus === 'completed') {
-            showModal('📦', 'Item Shipped', `Tracking info has been sent to ${customer}.`);
+            const data = await res.json();
+            if (!res.ok) { showModal('❌', 'Error', data.error || 'Something went wrong.'); return; }
+
+            // Update local state
+            const order = ordersList.find(o => o.id === orderNumber);
+            if (order) order.status = data.new_status;
+
+            renderOrders();
+
+            if (data.new_status === 'to-ship') {
+                showModal('🐕', 'Order Approved', `${order.customer}'s order is now ready for packing.`);
+            } else {
+                showModal('📦', 'Item Shipped', `Tracking info has been sent to ${order.customer}.`);
+            }
+        } catch (err) {
+            showModal('❌', 'Network Error', 'Could not update order. Please try again.');
         }
     }
 
@@ -161,12 +161,11 @@
     }
 
     function showModal(icon, title, message) {
-        const modal = document.getElementById('statusModal');
+        const modal   = document.getElementById('statusModal');
         const content = document.getElementById('modalContent');
-        document.getElementById('modalIcon').innerText = icon;
-        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalIcon').innerText    = icon;
+        document.getElementById('modalTitle').innerText   = title;
         document.getElementById('modalMessage').innerText = message;
-
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => {
@@ -176,7 +175,7 @@
     }
 
     function closeModal() {
-        const modal = document.getElementById('statusModal');
+        const modal   = document.getElementById('statusModal');
         const content = document.getElementById('modalContent');
         content.classList.add('scale-90', 'opacity-0');
         content.classList.remove('scale-100', 'opacity-100');
@@ -186,7 +185,6 @@
         }, 300);
     }
 
-    // Initial Load
     document.addEventListener('DOMContentLoaded', renderOrders);
 </script>
 @endsection

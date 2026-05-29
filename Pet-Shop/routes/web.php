@@ -9,6 +9,8 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\Customer\OrderTrackingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\GuestReplyController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +47,7 @@ Route::get('/track/{number}', [OrderTrackingController::class, 'result'])->name(
 Route::post('/contact', [App\Http\Controllers\ContactController::class, 'send'])
      ->name('contact.send');
 // 3D Customizer
-Route::get('/shop/3d', function () { return view('customer.3d-customizer'); })->name('shop.3d')->middleware('auth');
+Route::get('/shop/3d', function () { return view('customer.3d-customizer'); })->name('shop.3d');
 // Order history
 Route::get('/shop/orders', function () { return view('customer.order-history'); })->name('shop.orders')->middleware('auth');
 
@@ -56,6 +58,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/my-messages/send',[App\Http\Controllers\ContactController::class, 'myMessageSend'])
          ->name('my.messages.send');
 });
+
+// Guest reply page
+Route::get('/guest-reply/{token}',  [App\Http\Controllers\GuestReplyController::class, 'show'])->name('guest.reply');
+Route::post('/guest-reply/{token}', [App\Http\Controllers\GuestReplyController::class, 'send'])->name('guest.reply.send');
 /*
 |--------------------------------------------------------------------------
 | Admin Routes (Secured — auth middleware)

@@ -10,15 +10,16 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            
-            // Added from the second migration
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            
             $table->string('name');
-            $table->string('email')->nullable(); // Added from the second migration
+            $table->string('email')->nullable();
             $table->string('initials', 10);
-            $table->string('status')->default('Away'); // Online, Away, Offline
-            $table->string('category')->nullable();    // e.g. "Inquiry: Golden Retriever"
+            $table->string('status')->default('Away');
+            $table->string('category')->nullable();
+            
+            // Added the reply_token here
+            $table->string('reply_token')->nullable()->unique();
+            
             $table->timestamps();
         });
 
@@ -27,13 +28,12 @@ return new class extends Migration
             $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
             $table->enum('type', ['sent', 'received'])->default('received');
             $table->text('text');
-            $table->timestamps();  // created_at used as message time
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        // Must drop 'messages' first because it relies on 'conversations'
         Schema::dropIfExists('messages');
         Schema::dropIfExists('conversations');
     }

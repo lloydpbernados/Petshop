@@ -341,6 +341,7 @@ const CATALOG = @json($catalog);
 <span>Track Order</span>
 </a>
 <div class="guest-dropdown-divider"></div>
+{{-- ── FIXED: now navigates to the 3D builder for guests too ── --}}
 <button type="button" class="guest-dropdown-item" id="open3DCustomizer">
 <span class="item-icon">🎨</span>
 <span>3D Habitat Builder</span>
@@ -708,6 +709,19 @@ document.addEventListener('click', e => { if (!guestToggle.contains(e.target) &&
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { guestMenu.classList.remove('show'); guestToggle.classList.remove('active'); } });
 }
 document.getElementById('dropdownCart')?.addEventListener('click', e => { e.preventDefault(); openCart(); });
+
+// ══════════════════════════════════════════════════════════════════════════
+// FIX: Wire up the guest "3D Habitat Builder" dropdown button.
+// Previously this had no click handler so guests couldn't navigate to it.
+// ══════════════════════════════════════════════════════════════════════════
+document.getElementById('open3DCustomizer')?.addEventListener('click', function (e) {
+    e.preventDefault();
+    // Close the guest dropdown first for a clean UX transition
+    if (guestMenu) guestMenu.classList.remove('show');
+    if (guestToggle) guestToggle.classList.remove('active');
+    window.location.href = '{{ route('shop.3d') }}';
+});
+
 // ══════════ USER DROPDOWN (AUTHENTICATED) ══════════
 const userToggle = document.getElementById('userDropdownToggle');
 const userMenu = document.getElementById('userDropdownMenu');

@@ -64,22 +64,31 @@ class ConversationController extends Controller
             'text' => $data['text'],
         ]);
 
-        // ── If guest (no user_id) → email the reply ──────────────
+        // ── If guest (no user_id) → email the reply with reply link ──
         if (is_null($conversation->user_id) && $conversation->email) {
             try {
+                // ✅ Generate unique reply link using the token
+                $replyLink = url('/guest-reply/' . $conversation->reply_token);
+
                 Mail::raw(
-                    "Hi {$conversation->name},\n\nYou have a new reply from PawHaven:\n\n\"{$data['text']}\"\n\n---\nReply to this email or visit pawhaven.ph to send another message.\n\nPawHaven Team 🐾",
+                    "Hi {$conversation->name},\n\n" .
+                    "You have a new reply from PawHaven:\n\n" .
+                    "\"{$data['text']}\"\n\n" .
+                    "---\n" .
+                    "To reply, click this link:\n" .
+                    "{$replyLink}\n\n" .
+                    "PawHaven Team 🐾",
                     function ($mail) use ($conversation) {
                         $mail->to($conversation->email, $conversation->name)
                              ->subject('PawHaven replied to your message 🐾')
-                             ->replyTo(
-                                 config('mail.admin_address', 'support@pawhaven.ph'),
+                             ->from(
+                                 config('mail.from.address'),
                                  'PawHaven Support'
                              );
+                        // ✅ No replyTo — guest must use the link, not email reply
                     }
                 );
             } catch (\Exception $e) {
-                // Log but don't fail — reply is already saved
                 Log::warning('Failed to email guest reply: ' . $e->getMessage());
             }
         }

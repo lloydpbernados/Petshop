@@ -21,7 +21,6 @@ class ContactController extends Controller
 
         if (Auth::check()) {
             // ── Logged-in customer ──────────────────────────────────
-            // Find existing conversation or create one linked to their account
             $user  = Auth::user();
             $convo = Conversation::firstOrCreate(
                 ['user_id' => $user->id],
@@ -56,18 +55,19 @@ class ContactController extends Controller
                 'text' => $data['message'],
             ]);
 
-            // 2. Also send email notification to admin
+            // 2. Send email notification to admin
             try {
                 Mail::raw(
-                    "New guest message from PawHaven website\n\nName:  {$data['name']}\nEmail: {$data['email']}\n\nMessage:\n{$data['message']}",
+                    "New guest message from PawHaven website\n\n" .
+                    "Name:    {$data['name']}\n" .
+                    "Email:   {$data['email']}\n\n" .
+                    "Message:\n{$data['message']}",
                     function ($mail) use ($data) {
                         $mail->to(config('mail.admin_address', 'admin@pawhaven.ph'))
-                             ->subject("PawHaven Guest Message: {$data['name']}")
-                             ->replyTo($data['email'], $data['name']);
+                             ->subject("PawHaven Guest Message: {$data['name']}");
                     }
                 );
             } catch (\Exception $e) {
-                // Email failed but message is already saved — don't block the response
                 Log::warning('Guest contact email failed: ' . $e->getMessage());
             }
         }

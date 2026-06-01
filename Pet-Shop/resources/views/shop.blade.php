@@ -341,7 +341,6 @@ const CATALOG = @json($catalog);
 <span>Track Order</span>
 </a>
 <div class="guest-dropdown-divider"></div>
-{{-- ── FIXED: now navigates to the 3D builder for guests too ── --}}
 <button type="button" class="guest-dropdown-item" id="open3DCustomizer">
 <span class="item-icon">🎨</span>
 <span>3D Habitat Builder</span>
@@ -431,6 +430,7 @@ const CATALOG = @json($catalog);
 </div>
 </div>
 <div id="cartOverlay" class="cart-overlay"></div>
+
 {{-- CUSTOMER MESSAGES DRAWER (auth users only) --}}
 @auth
 <div id="msgDrawer" class="cart-drawer" style="width:440px; max-width:92vw;">
@@ -438,14 +438,12 @@ const CATALOG = @json($catalog);
 <h3 class="cart-title">💬 Messages</h3>
 <button id="msgClose" class="cart-close">✕</button>
 </div>
-{{-- Conversation window --}}
 <div id="msgWindow" class="cart-items" style="display:flex; flex-direction:column; gap:12px; padding:1.25rem 1.5rem;">
 <div style="text-align:center; color:var(--brown-muted); font-size:0.9rem; padding:2rem 0;">
 <div style="font-size:2rem; margin-bottom:8px;">💬</div>
 Loading messages…
 </div>
 </div>
-{{-- Input --}}
 <div class="cart-footer" style="padding:1rem 1.5rem;">
 <div style="display:flex; gap:0.6rem; align-items:center;">
 <input type="text" id="msgInput" placeholder="Type a message…"
@@ -467,6 +465,7 @@ Our team typically replies within a few hours 🐾
 </div>
 <div id="msgOverlay" class="cart-overlay"></div>
 @endauth
+
 <div id="checkoutModal" class="checkout-modal hidden">
 <div class="checkout-box">
 <button class="checkout-close" id="checkoutClose">✕</button>
@@ -509,6 +508,7 @@ Our team typically replies within a few hours 🐾
 </div>
 </div>
 </div>
+
 {{-- AUTH MODAL --}}
 <div id="shopAuthModal" class="modal-hidden">
 <div class="shop-auth-content">
@@ -588,156 +588,162 @@ Our team typically replies within a few hours 🐾
 </div>
 </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 function getCsrfToken() {
-return document.querySelector('meta[name="csrf-token"]')?.content
-|| document.querySelector('input[name="_token"]')?.value || '';
+    return document.querySelector('meta[name="csrf-token"]')?.content
+        || document.querySelector('input[name="_token"]')?.value || '';
 }
+
 // ══════════ AUTH MODAL ══════════
 (function () {
-const modal = document.getElementById('shopAuthModal');
-const loginTab = document.getElementById('shopAuthLoginForm');
-const signupTab = document.getElementById('shopAuthSignupForm');
-const closeBtn = document.getElementById('shopCloseAuthModal');
-const loginErr = document.getElementById('shopAuthLoginError');
-const loginOk = document.getElementById('shopAuthLoginSuccess');
-const signupErr = document.getElementById('shopAuthSignupError');
-const signupOk = document.getElementById('shopAuthSignupSuccess');
-function clearMessages() { [loginErr, loginOk, signupErr, signupOk].forEach(el => { if (el) el.style.display = 'none'; }); }
-function resetHints() { ['shop-hint-length','shop-hint-upper','shop-hint-lower','shop-hint-number'].forEach(id => document.getElementById(id)?.classList.remove('met')); }
-function resetEyes() {
-document.querySelectorAll('#shopAuthModal .pw-toggle').forEach(btn => {
-const input = document.getElementById(btn.dataset.target);
-if (input) input.type = 'password';
-const open = btn.querySelector('.eye-open'), closed = btn.querySelector('.eye-closed');
-if (open) open.style.display = 'block';
-if (closed) closed.style.display = 'none';
-});
-}
-function openAuthModal(tab) {
-if (!modal) return;
-tab = tab || 'login';
-modal.classList.remove('modal-hidden');
-document.body.style.overflow = 'hidden';
-document.getElementById('shopLoginForm')?.reset();
-document.getElementById('shopSignupForm')?.reset();
-clearMessages(); resetEyes(); resetHints();
-switchTab(tab);
-}
-function closeAuthModal() {
-if (!modal) return;
-modal.classList.add('modal-hidden');
-document.body.style.overflow = '';
-}
-function switchTab(to) {
-if (to === 'signup') { loginTab?.classList.add('tab-hidden'); signupTab?.classList.remove('tab-hidden'); document.getElementById('shopSignupName')?.focus(); }
-else { loginTab?.classList.remove('tab-hidden'); signupTab?.classList.add('tab-hidden'); document.getElementById('shopLoginEmail')?.focus(); }
-clearMessages(); resetHints();
-}
-closeBtn?.addEventListener('click', closeAuthModal);
-modal?.addEventListener('click', e => { if (e.target === modal) closeAuthModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
-modal?.addEventListener('click', e => {
-const link = e.target.closest('.switch-auth-link');
-if (link) { e.preventDefault(); e.stopPropagation(); switchTab(link.dataset.switchTo); }
-}, true);
-document.querySelectorAll('#shopAuthModal .pw-toggle').forEach(btn => {
-btn.addEventListener('click', function () {
-const input = document.getElementById(this.dataset.target);
-if (!input) return;
-const open = this.querySelector('.eye-open'), closed = this.querySelector('.eye-closed');
-if (input.type === 'password') { input.type = 'text'; if (open) open.style.display = 'none'; if (closed) closed.style.display = 'block'; }
-else { input.type = 'password'; if (open) open.style.display = 'block'; if (closed) closed.style.display = 'none'; }
-});
-});
-document.getElementById('shopSignupPassword')?.addEventListener('input', function () {
-const v = this.value;
-const checks = { 'shop-hint-length': v.length >= 8, 'shop-hint-upper': /[A-Z]/.test(v), 'shop-hint-lower': /[a-z]/.test(v), 'shop-hint-number': /[0-9]/.test(v) };
-Object.keys(checks).forEach(id => document.getElementById(id)?.classList.toggle('met', checks[id]));
-});
-document.getElementById('shopLoginForm')?.addEventListener('submit', function (e) {
-e.preventDefault();
-const email = document.getElementById('shopLoginEmail').value.trim();
-const password = document.getElementById('shopLoginPassword').value;
-const remember = document.getElementById('shopRememberMe').checked;
-const btn = document.getElementById('shopLoginSubmitBtn');
-if (!email || !password) { loginErr.textContent = '❌ Please enter your email and password.'; loginErr.style.display = 'block'; return; }
-btn.disabled = true; btn.textContent = 'Logging in…';
-loginErr.style.display = 'none'; loginOk.style.display = 'none';
-const body = new FormData();
-body.append('email', email); body.append('password', password);
-body.append('remember', remember ? '1' : '0'); body.append('_token', getCsrfToken());
-fetch("{{ route('login') }}", { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' }, body })
-.then(async res => {
-const data = await res.json().catch(() => ({}));
-if (res.ok && data.success) { loginOk.textContent = '✅ Login successful!'; loginOk.style.display = 'block'; setTimeout(() => window.location.href = data.redirect || "{{ route('shop') }}", 800); }
-else if (res.status === 422) { btn.disabled = false; btn.textContent = 'Log In to PawHaven'; let msg = data.message || 'Invalid credentials.'; if (data.errors?.email) msg = data.errors.email[0]; loginErr.textContent = '❌ ' + msg; loginErr.style.display = 'block'; }
-else { throw new Error(data.message); }
-}).catch(() => { btn.disabled = false; btn.textContent = 'Log In to PawHaven'; loginErr.textContent = '❌ Connection error.'; loginErr.style.display = 'block'; });
-});
-document.getElementById('shopSignupForm')?.addEventListener('submit', function (e) {
-e.preventDefault();
-const password = document.getElementById('shopSignupPassword').value;
-const confirm = document.getElementById('shopSignupPasswordConfirm').value;
-const btn = document.getElementById('shopSignupSubmitBtn');
-const validations = [[password.length < 8, '❌ Password must be at least 8 characters.'], [!/[A-Z]/.test(password), '❌ Password must include an uppercase letter.'], [!/[a-z]/.test(password), '❌ Password must include a lowercase letter.'], [!/[0-9]/.test(password), '❌ Password must include a number.'], [password !== confirm, '❌ Passwords do not match.']];
-for (const [fail, msg] of validations) { if (fail) { signupErr.textContent = msg; signupErr.style.display = 'block'; return; } }
-btn.disabled = true; btn.textContent = 'Creating account…';
-signupErr.style.display = 'none'; signupOk.style.display = 'none';
-const body = new FormData();
-body.append('name', document.getElementById('shopSignupName').value.trim());
-body.append('email', document.getElementById('shopSignupEmail').value.trim());
-body.append('password', password);
-body.append('password_confirmation', confirm);
-body.append('_token', getCsrfToken());
-fetch("{{ route('register') }}", { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' }, body })
-.then(async res => {
-const data = await res.json().catch(() => ({}));
-if (res.ok && data.success) { signupOk.textContent = '✅ Account created!'; signupOk.style.display = 'block'; setTimeout(() => window.location.href = data.redirect || "{{ route('shop') }}", 1500); }
-else if (res.status === 422) { btn.disabled = false; btn.textContent = 'Create Account'; let msg = 'Registration failed.'; if (data.errors) msg = Object.values(data.errors)[0][0]; signupErr.textContent = '❌ ' + msg; signupErr.style.display = 'block'; }
-else { throw new Error('Unexpected error.'); }
-}).catch(() => { btn.disabled = false; btn.textContent = 'Create Account'; signupErr.textContent = '❌ Connection error.'; signupErr.style.display = 'block'; });
-});
-document.getElementById('shopOpenLoginBtn')?.addEventListener('click', e => { e.preventDefault(); openAuthModal('login'); });
-const guestToggle = document.getElementById('guestDropdownToggle');
-const guestMenu = document.getElementById('guestDropdownMenu');
-if (guestToggle && guestMenu) {
-guestToggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); guestMenu.classList.toggle('show'); guestToggle.classList.toggle('active'); });
-document.addEventListener('click', e => { if (!guestToggle.contains(e.target) && !guestMenu.contains(e.target)) { guestMenu.classList.remove('show'); guestToggle.classList.remove('active'); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { guestMenu.classList.remove('show'); guestToggle.classList.remove('active'); } });
-}
-document.getElementById('dropdownCart')?.addEventListener('click', e => { e.preventDefault(); openCart(); });
+    const modal     = document.getElementById('shopAuthModal');
+    const loginTab  = document.getElementById('shopAuthLoginForm');
+    const signupTab = document.getElementById('shopAuthSignupForm');
+    const closeBtn  = document.getElementById('shopCloseAuthModal');
+    const loginErr  = document.getElementById('shopAuthLoginError');
+    const loginOk   = document.getElementById('shopAuthLoginSuccess');
+    const signupErr = document.getElementById('shopAuthSignupError');
+    const signupOk  = document.getElementById('shopAuthSignupSuccess');
 
-// ══════════════════════════════════════════════════════════════════════════
-// FIX: Wire up the guest "3D Habitat Builder" dropdown button.
-// Previously this had no click handler so guests couldn't navigate to it.
-// ══════════════════════════════════════════════════════════════════════════
-document.getElementById('open3DCustomizer')?.addEventListener('click', function (e) {
-    e.preventDefault();
-    // Close the guest dropdown first for a clean UX transition
-    if (guestMenu) guestMenu.classList.remove('show');
-    if (guestToggle) guestToggle.classList.remove('active');
-    window.location.href = '{{ route('shop.3d') }}';
-});
+    function clearMessages() { [loginErr, loginOk, signupErr, signupOk].forEach(el => { if (el) el.style.display = 'none'; }); }
+    function resetHints() { ['shop-hint-length','shop-hint-upper','shop-hint-lower','shop-hint-number'].forEach(id => document.getElementById(id)?.classList.remove('met')); }
+    function resetEyes() {
+        document.querySelectorAll('#shopAuthModal .pw-toggle').forEach(btn => {
+            const input = document.getElementById(btn.dataset.target);
+            if (input) input.type = 'password';
+            const open = btn.querySelector('.eye-open'), closed = btn.querySelector('.eye-closed');
+            if (open) open.style.display = 'block';
+            if (closed) closed.style.display = 'none';
+        });
+    }
+    function openAuthModal(tab) {
+        if (!modal) return;
+        tab = tab || 'login';
+        modal.classList.remove('modal-hidden');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('shopLoginForm')?.reset();
+        document.getElementById('shopSignupForm')?.reset();
+        clearMessages(); resetEyes(); resetHints();
+        switchTab(tab);
+    }
+    function closeAuthModal() {
+        if (!modal) return;
+        modal.classList.add('modal-hidden');
+        document.body.style.overflow = '';
+    }
+    function switchTab(to) {
+        if (to === 'signup') { loginTab?.classList.add('tab-hidden'); signupTab?.classList.remove('tab-hidden'); document.getElementById('shopSignupName')?.focus(); }
+        else { loginTab?.classList.remove('tab-hidden'); signupTab?.classList.add('tab-hidden'); document.getElementById('shopLoginEmail')?.focus(); }
+        clearMessages(); resetHints();
+    }
 
-// ══════════ USER DROPDOWN (AUTHENTICATED) ══════════
-const userToggle = document.getElementById('userDropdownToggle');
-const userMenu = document.getElementById('userDropdownMenu');
-if (userToggle && userMenu) {
-userToggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); userMenu.classList.toggle('show'); userToggle.classList.toggle('active'); });
-document.addEventListener('click', e => { if (!userToggle.contains(e.target) && !userMenu.contains(e.target)) { userMenu.classList.remove('show'); userToggle.classList.remove('active'); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { userMenu.classList.remove('show'); userToggle.classList.remove('active'); } });
-}
-document.getElementById('userCartToggle')?.addEventListener('click', e => {
-e.preventDefault();
-openCart();
-if(userMenu) userMenu.classList.remove('show');
-if(userToggle) userToggle.classList.remove('active');
-});
-window.__shopOpenAuthModal = openAuthModal;
+    closeBtn?.addEventListener('click', closeAuthModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closeAuthModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
+    modal?.addEventListener('click', e => {
+        const link = e.target.closest('.switch-auth-link');
+        if (link) { e.preventDefault(); e.stopPropagation(); switchTab(link.dataset.switchTo); }
+    }, true);
+
+    document.querySelectorAll('#shopAuthModal .pw-toggle').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const input = document.getElementById(this.dataset.target);
+            if (!input) return;
+            const open = this.querySelector('.eye-open'), closed = this.querySelector('.eye-closed');
+            if (input.type === 'password') { input.type = 'text'; if (open) open.style.display = 'none'; if (closed) closed.style.display = 'block'; }
+            else { input.type = 'password'; if (open) open.style.display = 'block'; if (closed) closed.style.display = 'none'; }
+        });
+    });
+
+    document.getElementById('shopSignupPassword')?.addEventListener('input', function () {
+        const v = this.value;
+        const checks = { 'shop-hint-length': v.length >= 8, 'shop-hint-upper': /[A-Z]/.test(v), 'shop-hint-lower': /[a-z]/.test(v), 'shop-hint-number': /[0-9]/.test(v) };
+        Object.keys(checks).forEach(id => document.getElementById(id)?.classList.toggle('met', checks[id]));
+    });
+
+    document.getElementById('shopLoginForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email    = document.getElementById('shopLoginEmail').value.trim();
+        const password = document.getElementById('shopLoginPassword').value;
+        const remember = document.getElementById('shopRememberMe').checked;
+        const btn      = document.getElementById('shopLoginSubmitBtn');
+        if (!email || !password) { loginErr.textContent = '❌ Please enter your email and password.'; loginErr.style.display = 'block'; return; }
+        btn.disabled = true; btn.textContent = 'Logging in…';
+        loginErr.style.display = 'none'; loginOk.style.display = 'none';
+        const body = new FormData();
+        body.append('email', email); body.append('password', password);
+        body.append('remember', remember ? '1' : '0'); body.append('_token', getCsrfToken());
+        fetch("{{ route('login') }}", { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' }, body })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) { loginOk.textContent = '✅ Login successful!'; loginOk.style.display = 'block'; setTimeout(() => window.location.href = data.redirect || "{{ route('shop') }}", 800); }
+            else if (res.status === 422) { btn.disabled = false; btn.textContent = 'Log In to PawHaven'; let msg = data.message || 'Invalid credentials.'; if (data.errors?.email) msg = data.errors.email[0]; loginErr.textContent = '❌ ' + msg; loginErr.style.display = 'block'; }
+            else { throw new Error(data.message); }
+        }).catch(() => { btn.disabled = false; btn.textContent = 'Log In to PawHaven'; loginErr.textContent = '❌ Connection error.'; loginErr.style.display = 'block'; });
+    });
+
+    document.getElementById('shopSignupForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const password = document.getElementById('shopSignupPassword').value;
+        const confirm  = document.getElementById('shopSignupPasswordConfirm').value;
+        const btn      = document.getElementById('shopSignupSubmitBtn');
+        const validations = [[password.length < 8, '❌ Password must be at least 8 characters.'], [!/[A-Z]/.test(password), '❌ Password must include an uppercase letter.'], [!/[a-z]/.test(password), '❌ Password must include a lowercase letter.'], [!/[0-9]/.test(password), '❌ Password must include a number.'], [password !== confirm, '❌ Passwords do not match.']];
+        for (const [fail, msg] of validations) { if (fail) { signupErr.textContent = msg; signupErr.style.display = 'block'; return; } }
+        btn.disabled = true; btn.textContent = 'Creating account…';
+        signupErr.style.display = 'none'; signupOk.style.display = 'none';
+        const body = new FormData();
+        body.append('name', document.getElementById('shopSignupName').value.trim());
+        body.append('email', document.getElementById('shopSignupEmail').value.trim());
+        body.append('password', password);
+        body.append('password_confirmation', confirm);
+        body.append('_token', getCsrfToken());
+        fetch("{{ route('register') }}", { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' }, body })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) { signupOk.textContent = '✅ Account created!'; signupOk.style.display = 'block'; setTimeout(() => window.location.href = data.redirect || "{{ route('shop') }}", 1500); }
+            else if (res.status === 422) { btn.disabled = false; btn.textContent = 'Create Account'; let msg = 'Registration failed.'; if (data.errors) msg = Object.values(data.errors)[0][0]; signupErr.textContent = '❌ ' + msg; signupErr.style.display = 'block'; }
+            else { throw new Error('Unexpected error.'); }
+        }).catch(() => { btn.disabled = false; btn.textContent = 'Create Account'; signupErr.textContent = '❌ Connection error.'; signupErr.style.display = 'block'; });
+    });
+
+    document.getElementById('shopOpenLoginBtn')?.addEventListener('click', e => { e.preventDefault(); openAuthModal('login'); });
+
+    const guestToggle = document.getElementById('guestDropdownToggle');
+    const guestMenu   = document.getElementById('guestDropdownMenu');
+    if (guestToggle && guestMenu) {
+        guestToggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); guestMenu.classList.toggle('show'); guestToggle.classList.toggle('active'); });
+        document.addEventListener('click', e => { if (!guestToggle.contains(e.target) && !guestMenu.contains(e.target)) { guestMenu.classList.remove('show'); guestToggle.classList.remove('active'); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { guestMenu.classList.remove('show'); guestToggle.classList.remove('active'); } });
+    }
+    document.getElementById('dropdownCart')?.addEventListener('click', e => { e.preventDefault(); openCart(); });
+    document.getElementById('open3DCustomizer')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (guestMenu) guestMenu.classList.remove('show');
+        if (guestToggle) guestToggle.classList.remove('active');
+        window.location.href = '{{ route('shop.3d') }}';
+    });
+
+    // ── USER DROPDOWN (AUTHENTICATED) ──
+    const userToggle = document.getElementById('userDropdownToggle');
+    const userMenu   = document.getElementById('userDropdownMenu');
+    if (userToggle && userMenu) {
+        userToggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); userMenu.classList.toggle('show'); userToggle.classList.toggle('active'); });
+        document.addEventListener('click', e => { if (!userToggle.contains(e.target) && !userMenu.contains(e.target)) { userMenu.classList.remove('show'); userToggle.classList.remove('active'); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { userMenu.classList.remove('show'); userToggle.classList.remove('active'); } });
+    }
+    document.getElementById('userCartToggle')?.addEventListener('click', e => {
+        e.preventDefault();
+        openCart();
+        if (userMenu) userMenu.classList.remove('show');
+        if (userToggle) userToggle.classList.remove('active');
+    });
+
+    window.__shopOpenAuthModal = openAuthModal;
 })();
+
 // ══════════ SHOP LOGIC ══════════
 const allProducts = CATALOG;
 let cart = JSON.parse(sessionStorage.getItem('ph_cart') || '[]');
@@ -745,39 +751,44 @@ let activeType = new URLSearchParams(location.search).get('type') || '';
 let activeCat = '', maxPrice = 50000, availOnly = false, searchQ = '', sortMode = 'default';
 let selectedPayment = 'cash';
 const GCASH_LIMIT = 10000;
-document.getElementById('statTotal').textContent = allProducts.length;
-document.getElementById('statPets').textContent = allProducts.filter(p => p.type === 'pet').length;
+
+document.getElementById('statTotal').textContent    = allProducts.length;
+document.getElementById('statPets').textContent     = allProducts.filter(p => p.type === 'pet').length;
 document.getElementById('statServices').textContent = allProducts.filter(p => p.type === 'service').length;
+
 const autoAdd = new URLSearchParams(location.search).get('addToCart');
 if (autoAdd) { const item = allProducts.find(p => String(p.id) === String(autoAdd)); if (item && item.available) addToCart(item); }
+
 function getCategories(type) { const items = type ? allProducts.filter(p => p.type === type) : allProducts; return [...new Set(items.map(p => p.category))].sort(); }
+
 function renderCatPills() {
-const cats = getCategories(activeType);
-document.getElementById('catPills').innerHTML = ['', ...cats].map(c => `<button class="pill${activeCat === c ? ' active' : ''}" data-cat="${c}">${c || 'All'}</button>`).join('');
-document.querySelectorAll('#catPills .pill').forEach(btn => btn.addEventListener('click', () => { activeCat = btn.dataset.cat; renderCatPills(); renderGrid(); }));
+    const cats = getCategories(activeType);
+    document.getElementById('catPills').innerHTML = ['', ...cats].map(c => `<button class="pill${activeCat === c ? ' active' : ''}" data-cat="${c}">${c || 'All'}</button>`).join('');
+    document.querySelectorAll('#catPills .pill').forEach(btn => btn.addEventListener('click', () => { activeCat = btn.dataset.cat; renderCatPills(); renderGrid(); }));
 }
+
 function renderGrid() {
-let items = allProducts.filter(p => {
-if (activeType && p.type !== activeType) return false;
-if (activeCat && p.category !== activeCat) return false;
-if (availOnly && !p.available) return false;
-if (p.price > maxPrice) return false;
-if (searchQ && !p.name.toLowerCase().includes(searchQ)) return false;
-return true;
-});
-if (sortMode === 'price-asc') items.sort((a, b) => a.price - b.price);
-if (sortMode === 'price-desc') items.sort((a, b) => b.price - a.price);
-if (sortMode === 'name-asc') items.sort((a, b) => a.name.localeCompare(b.name));
-document.getElementById('resultsBar').textContent = `${items.length} result${items.length !== 1 ? 's' : ''} found`;
-document.getElementById('emptyState').classList.toggle('hidden', items.length > 0);
-document.getElementById('productGrid').innerHTML = items.map(p => {
-const badgeHtml = p.badge ? `<span class="badge badge-${p.badge}">${p.badgeLabel}</span>` : '';
-const inCart = cart.some(c => String(c.id) === String(p.id));
-const availCls = p.available ? '' : 'unavailable';
-const imgContent = p.image
-? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
-: `<span class="card-emoji">${p.emoji}</span>`;
-return `<div class="product-card ${availCls}">
+    let items = allProducts.filter(p => {
+        if (activeType && p.type !== activeType) return false;
+        if (activeCat && p.category !== activeCat) return false;
+        if (availOnly && !p.available) return false;
+        if (p.price > maxPrice) return false;
+        if (searchQ && !p.name.toLowerCase().includes(searchQ)) return false;
+        return true;
+    });
+    if (sortMode === 'price-asc')  items.sort((a, b) => a.price - b.price);
+    if (sortMode === 'price-desc') items.sort((a, b) => b.price - a.price);
+    if (sortMode === 'name-asc')   items.sort((a, b) => a.name.localeCompare(b.name));
+    document.getElementById('resultsBar').textContent = `${items.length} result${items.length !== 1 ? 's' : ''} found`;
+    document.getElementById('emptyState').classList.toggle('hidden', items.length > 0);
+    document.getElementById('productGrid').innerHTML = items.map(p => {
+        const badgeHtml  = p.badge ? `<span class="badge badge-${p.badge}">${p.badgeLabel}</span>` : '';
+        const inCart     = cart.some(c => String(c.id) === String(p.id));
+        const availCls   = p.available ? '' : 'unavailable';
+        const imgContent = p.image
+            ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
+            : `<span class="card-emoji">${p.emoji}</span>`;
+        return `<div class="product-card ${availCls}">
 <div class="card-img">
 ${imgContent}
 ${badgeHtml}
@@ -790,208 +801,311 @@ ${!p.available ? '<div class="unavail-overlay">Out of Stock</div>' : ''}
 <div class="card-footer">
 <span class="card-price">₱${p.price.toLocaleString()}</span>
 ${p.available
-? `<button class="add-to-cart ${inCart ? 'in-cart' : ''}" onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">${inCart ? '✓ Added' : '+ Add'}</button>`
-: `<span class="unavail-tag">Unavailable</span>`}
+    ? `<button class="add-to-cart ${inCart ? 'in-cart' : ''}" onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">${inCart ? '✓ Added' : '+ Add'}</button>`
+    : `<span class="unavail-tag">Unavailable</span>`}
 </div>
 </div>
 </div>`;
-}).join('');
+    }).join('');
 }
+
+// ── UPDATED: carries item_type and source_id so the backend can deduct stock ──
 function addToCart(item) {
-const existing = cart.find(c => String(c.id) === String(item.id));
-if (existing) existing.qty++;
-else          cart.push({ ...item, qty: 1 });
-saveCart(); renderCart(); renderGrid();
+    const existing = cart.find(c => String(c.id) === String(item.id));
+    if (existing) {
+        existing.qty++;
+    } else {
+        // Derive item_type from the catalog 'type' field
+        const itemType = item.type === 'pet'     ? 'pet'
+                       : item.type === 'service' ? 'service'
+                       :                           'supply';
+        // source_id: strip the text prefix from the compound id (e.g. "pet-12" → 12)
+        const sourceId = parseInt(String(item.id).replace(/^[a-z]+-/i, '')) || null;
+        cart.push({ ...item, qty: 1, item_type: itemType, source_id: sourceId, scheduled_at: null });
+    }
+    saveCart(); renderCart(); renderGrid();
 }
+
 function removeFromCart(id) {
-cart = cart.filter(c => String(c.id) !== String(id));
-saveCart(); renderCart(); renderGrid();
+    cart = cart.filter(c => String(c.id) !== String(id));
+    saveCart(); renderCart(); renderGrid();
 }
+
 function updateQty(id, delta) {
-const item = cart.find(c => String(c.id) === String(id));
-if (!item) return;
-item.qty = Math.max(1, item.qty + delta);
-saveCart(); renderCart();
+    const item = cart.find(c => String(c.id) === String(id));
+    if (!item) return;
+    item.qty = Math.max(1, item.qty + delta);
+    saveCart(); renderCart();
 }
+
 function saveCart() {
-sessionStorage.setItem('ph_cart', JSON.stringify(cart));
-const total = cart.reduce((s, c) => s + c.qty, 0);
-const countEl = document.getElementById('cartCount'); if (countEl) countEl.textContent = total;
-const dropdownCountEl = document.getElementById('dropdownCartCount'); if (dropdownCountEl) dropdownCountEl.textContent = total;
+    sessionStorage.setItem('ph_cart', JSON.stringify(cart));
+    const total = cart.reduce((s, c) => s + c.qty, 0);
+    const countEl         = document.getElementById('cartCount');         if (countEl)         countEl.textContent         = total;
+    const dropdownCountEl = document.getElementById('dropdownCartCount'); if (dropdownCountEl) dropdownCountEl.textContent = total;
 }
+
 function renderCart() {
-const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-document.getElementById('cartTotal').textContent = '₱' + total.toLocaleString();
-document.getElementById('cartItems').innerHTML = cart.length
-? cart.map(c => `<div class="cart-item"><span class="cart-item-emoji">${c.emoji}</span><div class="cart-item-info"><div class="cart-item-name">${c.name}</div><div class="cart-item-price">₱${(c.price * c.qty).toLocaleString()}</div></div><div class="cart-qty-wrap"><button onclick="window.__cart.updateQty('${c.id}', -1)">−</button><span>${c.qty}</span><button onclick="window.__cart.updateQty('${c.id}', +1)">+</button></div><button class="cart-remove" onclick="window.__cart.removeFromCart('${c.id}')">✕</button></div>`).join('')
-: `<div class="cart-empty"><span class="cart-empty-icon">🛒</span>Your cart is empty</div>`;
+    const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+    document.getElementById('cartTotal').textContent = '₱' + total.toLocaleString();
+    document.getElementById('cartItems').innerHTML = cart.length
+        ? cart.map(c => `<div class="cart-item"><span class="cart-item-emoji">${c.emoji}</span><div class="cart-item-info"><div class="cart-item-name">${c.name}</div><div class="cart-item-price">₱${(c.price * c.qty).toLocaleString()}</div></div><div class="cart-qty-wrap"><button onclick="window.__cart.updateQty('${c.id}', -1)">−</button><span>${c.qty}</span><button onclick="window.__cart.updateQty('${c.id}', +1)">+</button></div><button class="cart-remove" onclick="window.__cart.removeFromCart('${c.id}')">✕</button></div>`).join('')
+        : `<div class="cart-empty"><span class="cart-empty-icon">🛒</span>Your cart is empty</div>`;
 }
+
 function selectPayment(method) {
-if (method === 'cash' && document.getElementById('optCash').classList.contains('locked')) return;
-selectedPayment = method;
-document.getElementById('paymentMethodInput').value = method;
-const isGcash = method === 'gcash';
-document.getElementById('optGcash').classList.toggle('selected', isGcash);
-document.getElementById('optCash').classList.toggle('selected', !isGcash);
-document.getElementById('checkGcash').textContent = isGcash ? '✓' : '';
-document.getElementById('checkCash').textContent = !isGcash ? '✓' : '';
-document.getElementById('gcashRefGroup').classList.toggle('show', isGcash);
-if (!isGcash) document.getElementById('gcashRef').value = '';
+    if (method === 'cash' && document.getElementById('optCash').classList.contains('locked')) return;
+    selectedPayment = method;
+    document.getElementById('paymentMethodInput').value = method;
+    const isGcash = method === 'gcash';
+    document.getElementById('optGcash').classList.toggle('selected', isGcash);
+    document.getElementById('optCash').classList.toggle('selected', !isGcash);
+    document.getElementById('checkGcash').textContent = isGcash ? '✓' : '';
+    document.getElementById('checkCash').textContent  = !isGcash ? '✓' : '';
+    document.getElementById('gcashRefGroup').classList.toggle('show', isGcash);
+    if (!isGcash) document.getElementById('gcashRef').value = '';
 }
+
 function applyPaymentRules(total) {
-const cashOption = document.getElementById('optCash');
-const lockNotice = document.getElementById('gcashLockNotice');
-if (total > GCASH_LIMIT) { cashOption.classList.add('locked'); lockNotice.classList.add('show'); selectPayment('gcash'); }
-else { cashOption.classList.remove('locked'); lockNotice.classList.remove('show'); selectPayment('cash'); }
+    const cashOption = document.getElementById('optCash');
+    const lockNotice = document.getElementById('gcashLockNotice');
+    if (total > GCASH_LIMIT) { cashOption.classList.add('locked'); lockNotice.classList.add('show'); selectPayment('gcash'); }
+    else { cashOption.classList.remove('locked'); lockNotice.classList.remove('show'); selectPayment('cash'); }
 }
+
+// ── Sync service date picker value into hidden input ──────────────────────────
+function updateScheduledAt(index, value) {
+    const hiddenInput = document.getElementById(`hidden_sched_${index}`);
+    if (hiddenInput) hiddenInput.value = value;
+}
+window.updateScheduledAt = updateScheduledAt;
+
+// ── UPDATED: guard ensures every service item has a booking date ──────────────
 function proceedToOTP() {
-const name = document.getElementById('chkName').value.trim();
-const email = document.getElementById('chkEmail').value.trim();
-if (!name || !email) { alert('Please fill in your full name and email.'); return; }
-if (selectedPayment === 'gcash') {
-const ref = document.getElementById('gcashRef').value.trim();
-if (ref.length < 13) { alert('Enter complete 13-digit reference.'); return; }
+    const name  = document.getElementById('chkName').value.trim();
+    const email = document.getElementById('chkEmail').value.trim();
+    if (!name || !email) { alert('Please fill in your full name and email.'); return; }
+    if (selectedPayment === 'gcash') {
+        const ref = document.getElementById('gcashRef').value.trim();
+        if (ref.length < 13) { alert('Enter complete 13-digit reference.'); return; }
+    }
+    // Require a booking date for every service in the cart
+    const missingDate = cart.some((item, i) => {
+        if (item.item_type !== 'service') return false;
+        const hiddenInput = document.getElementById(`hidden_sched_${i}`);
+        return !hiddenInput || !hiddenInput.value;
+    });
+    if (missingDate) {
+        alert('Please select a preferred booking date for each service.');
+        return;
+    }
+    document.getElementById('otpEmailDisplay').textContent  = email;
+    document.getElementById('otpSection').style.display    = 'block';
+    document.getElementById('proceedToOtpBtn').style.display = 'none';
 }
-document.getElementById('otpEmailDisplay').textContent = email;
-document.getElementById('otpSection').style.display = 'block';
-document.getElementById('proceedToOtpBtn').style.display = 'none';
-}
+
 async function sendOTP() {
-const email = document.getElementById('chkEmail').value.trim();
-const btn = document.getElementById('otpBtn');
-const status = document.getElementById('otpStatus');
-if (!email) { status.textContent = 'Enter email first.'; status.style.color = '#EF4444'; return; }
-btn.disabled = true; btn.textContent = 'Sending…';
-try {
-const res = await fetch('{{ route("shop.otp.send") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }, body: JSON.stringify({ email, name: document.getElementById('chkName').value.trim() }) });
-const data = await res.json();
-if (res.ok && data.success) {
-status.textContent = `✅ OTP sent to ${email}`; status.style.color = '#34A853';
-let countdown = 60; btn.textContent = `Resend in ${countdown}s`;
-const timer = setInterval(() => { countdown--; btn.textContent = `Resend in ${countdown}s`; if (countdown <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = 'Resend OTP'; } }, 1000);
-} else { status.textContent = data.message || 'Failed'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Send OTP'; }
-} catch { status.textContent = 'Network error'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Send OTP'; }
+    const email  = document.getElementById('chkEmail').value.trim();
+    const btn    = document.getElementById('otpBtn');
+    const status = document.getElementById('otpStatus');
+    if (!email) { status.textContent = 'Enter email first.'; status.style.color = '#EF4444'; return; }
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+        const res  = await fetch('{{ route("shop.otp.send") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }, body: JSON.stringify({ email, name: document.getElementById('chkName').value.trim() }) });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            status.textContent = `✅ OTP sent to ${email}`; status.style.color = '#34A853';
+            let countdown = 60; btn.textContent = `Resend in ${countdown}s`;
+            const timer = setInterval(() => { countdown--; btn.textContent = `Resend in ${countdown}s`; if (countdown <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = 'Resend OTP'; } }, 1000);
+        } else { status.textContent = data.message || 'Failed'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Send OTP'; }
+    } catch { status.textContent = 'Network error'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Send OTP'; }
 }
-document.getElementById('otpInput').addEventListener('input', function () { document.getElementById('placeOrderBtn').style.display = this.value.length === 6 ? 'block' : 'none'; });
+
+document.getElementById('otpInput').addEventListener('input', function () {
+    document.getElementById('placeOrderBtn').style.display = this.value.length === 6 ? 'block' : 'none';
+});
+
 async function verifyAndSubmit() {
-const email = document.getElementById('chkEmail').value.trim();
-const otp = document.getElementById('otpInput').value.trim();
-const status = document.getElementById('otpStatus');
-const btn = document.getElementById('placeOrderBtn');
-btn.disabled = true; btn.textContent = 'Verifying…';
-try {
-const res = await fetch('{{ route("shop.otp.verify") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }, body: JSON.stringify({ email, otp }) });
-const data = await res.json();
-if (res.ok && data.success) { status.textContent = '✅ Verified!'; status.style.color = '#34A853'; btn.textContent = 'Placing Order…'; setTimeout(() => document.getElementById('checkoutForm').submit(), 600); }
-else { status.textContent = data.message || 'Incorrect OTP'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
-} catch { status.textContent = 'Network error'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
+    const email  = document.getElementById('chkEmail').value.trim();
+    const otp    = document.getElementById('otpInput').value.trim();
+    const status = document.getElementById('otpStatus');
+    const btn    = document.getElementById('placeOrderBtn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    try {
+        const res  = await fetch('{{ route("shop.otp.verify") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }, body: JSON.stringify({ email, otp }) });
+        const data = await res.json();
+        if (res.ok && data.success) { status.textContent = '✅ Verified!'; status.style.color = '#34A853'; btn.textContent = 'Placing Order…'; setTimeout(() => document.getElementById('checkoutForm').submit(), 600); }
+        else { status.textContent = data.message || 'Incorrect OTP'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
+    } catch { status.textContent = 'Network error'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
 }
-function openCart() { document.getElementById('cartDrawer').classList.add('open'); document.getElementById('cartOverlay').classList.add('show'); }
+
+function openCart()  { document.getElementById('cartDrawer').classList.add('open');    document.getElementById('cartOverlay').classList.add('show'); }
 function closeCart() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('show'); }
-// ══════════════════════════════════════════════════════════════════════════
-// FIX: Expose functions that are called via inline onclick attributes to the
-// global scope. Functions defined inside DOMContentLoaded are local and
-// invisible to onclick="..." handlers which execute in global (window) scope.
-// ══════════════════════════════════════════════════════════════════════════
-window.__cart = { removeFromCart, updateQty };
+
+// Expose to global scope for inline onclick handlers
+window.__cart         = { removeFromCart, updateQty };
 window.addToCart      = addToCart;
 window.selectPayment  = selectPayment;
 window.proceedToOTP   = proceedToOTP;
 window.sendOTP        = sendOTP;
 window.verifyAndSubmit = verifyAndSubmit;
+
+// ── UPDATED: checkout button — builds hidden inputs with new fields + service date pickers ──
 document.getElementById('checkoutBtn').addEventListener('click', () => {
-if (!cart.length) return;
-const hidden = document.getElementById('checkoutHiddenItems'); hidden.innerHTML = '';
-cart.forEach((item, i) => { hidden.innerHTML += `<input type="hidden" name="items[${i}][name]" value="${item.name}"><input type="hidden" name="items[${i}][emoji]" value="${item.emoji}"><input type="hidden" name="items[${i}][qty]" value="${item.qty}"><input type="hidden" name="items[${i}][price]" value="${item.price}">`; });
-const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-document.getElementById('checkoutSummary').innerHTML = cart.map(c => `<div class="summary-row"><span>${c.emoji} ${c.name} ×${c.qty}</span><span>₱${(c.price * c.qty).toLocaleString()}</span></div>`).join('');
-document.getElementById('checkoutGrandTotal').textContent = '₱' + total.toLocaleString();
-document.getElementById('otpSection').style.display = 'none';
-document.getElementById('proceedToOtpBtn').style.display = 'block';
-document.getElementById('placeOrderBtn').style.display = 'none';
-applyPaymentRules(total);
-document.getElementById('checkoutModal').classList.remove('hidden');
-closeCart();
+    if (!cart.length) return;
+
+    // Calculate tomorrow as the minimum bookable date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+
+    // Build all hidden inputs including item_type, source_id, and scheduled_at placeholder
+    const hidden = document.getElementById('checkoutHiddenItems');
+    hidden.innerHTML = '';
+    cart.forEach((item, i) => {
+        hidden.innerHTML += `
+            <input type="hidden" name="items[${i}][name]"          value="${item.name}">
+            <input type="hidden" name="items[${i}][emoji]"         value="${item.emoji ?? ''}">
+            <input type="hidden" name="items[${i}][qty]"           value="${item.qty}">
+            <input type="hidden" name="items[${i}][price]"         value="${item.price}">
+            <input type="hidden" name="items[${i}][item_type]"     value="${item.item_type ?? 'supply'}">
+            <input type="hidden" name="items[${i}][source_id]"     value="${item.source_id ?? ''}">
+            <input type="hidden" name="items[${i}][scheduled_at]"  id="hidden_sched_${i}" value="">
+        `;
+    });
+
+    // Build the order summary — services get a date picker inline
+    document.getElementById('checkoutSummary').innerHTML = cart.map((item, i) => {
+        const subtotal  = (item.price * item.qty).toLocaleString();
+        const isService = item.item_type === 'service';
+        const datePicker = isService ? `
+            <div style="margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <label style="font-size:0.78rem; font-weight:700; color:#A68B6D; white-space:nowrap;">
+                    📅 Preferred Date:
+                </label>
+                <input type="date"
+                       min="${minDate}"
+                       onchange="updateScheduledAt(${i}, this.value)"
+                       style="padding:4px 8px; border:1.5px solid #F3E9DC; border-radius:8px;
+                              font-size:0.82rem; background:#FDF8F1; color:#2D241E;
+                              cursor:pointer; outline:none; flex:1; min-width:140px;">
+            </div>` : '';
+        return `
+            <div style="padding:8px 0; border-bottom:1px dashed #F3E9DC; font-size:0.9rem;">
+                <div style="display:flex; justify-content:space-between; gap:1rem;">
+                    <span style="color:#2D241E; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        ${item.emoji ?? ''} ${item.name} ×${item.qty}
+                    </span>
+                    <span style="font-weight:700; color:#2D241E; white-space:nowrap;">₱${subtotal}</span>
+                </div>
+                ${datePicker}
+            </div>`;
+    }).join('');
+
+    const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+    document.getElementById('checkoutGrandTotal').textContent = '₱' + total.toLocaleString();
+
+    // Reset OTP section state
+    document.getElementById('otpSection').style.display      = 'none';
+    document.getElementById('proceedToOtpBtn').style.display = 'block';
+    document.getElementById('placeOrderBtn').style.display   = 'none';
+
+    applyPaymentRules(total);
+    document.getElementById('checkoutModal').classList.remove('hidden');
+    closeCart();
 });
+
 document.getElementById('checkoutClose').addEventListener('click', () => { document.getElementById('checkoutModal').classList.add('hidden'); });
 document.getElementById('cartToggle')?.addEventListener('click', openCart);
 document.getElementById('cartClose').addEventListener('click', closeCart);
 document.getElementById('cartOverlay').addEventListener('click', closeCart);
+
 document.querySelectorAll('#typePills .pill').forEach(btn => {
-btn.addEventListener('click', () => {
-document.querySelectorAll('#typePills .pill').forEach(b => b.classList.remove('active'));
-btn.classList.add('active'); activeType = btn.dataset.type; activeCat = '';
-renderCatPills(); renderGrid();
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#typePills .pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); activeType = btn.dataset.type; activeCat = '';
+        renderCatPills(); renderGrid();
+    });
 });
+
+document.getElementById('priceSlider').addEventListener('input', function () {
+    maxPrice = parseInt(this.value);
+    document.getElementById('priceLabel').textContent = maxPrice >= 50000 ? 'Up to ₱50,000+' : 'Up to ₱' + maxPrice.toLocaleString();
+    renderGrid();
 });
-document.getElementById('priceSlider').addEventListener('input', function () { maxPrice = parseInt(this.value); document.getElementById('priceLabel').textContent = maxPrice >= 50000 ? 'Up to ₱50,000+' : 'Up to ₱' + maxPrice.toLocaleString(); renderGrid(); });
-document.getElementById('availOnly').addEventListener('change', function () { availOnly = this.checked; renderGrid(); });
-document.getElementById('searchInput').addEventListener('input', function () { searchQ = this.value.toLowerCase(); renderGrid(); });
-document.getElementById('sortSelect').addEventListener('change', function () { sortMode = this.value; renderGrid(); });
+document.getElementById('availOnly').addEventListener('change', function ()  { availOnly = this.checked;           renderGrid(); });
+document.getElementById('searchInput').addEventListener('input', function ()  { searchQ = this.value.toLowerCase(); renderGrid(); });
+document.getElementById('sortSelect').addEventListener('change', function ()  { sortMode = this.value;              renderGrid(); });
+
 saveCart(); renderCart(); renderCatPills(); renderGrid();
 if (activeType) { document.querySelectorAll('#typePills .pill').forEach(b => b.classList.toggle('active', b.dataset.type === activeType)); }
+
 // ══════════ CUSTOMER MESSAGES (auth only) ══════════
 (function () {
-const drawer  = document.getElementById('msgDrawer');
-const overlay = document.getElementById('msgOverlay');
-const window_ = document.getElementById('msgWindow');
-const input   = document.getElementById('msgInput');
-if (!drawer) return;  // guest — skip
-function openMsg()  { drawer.classList.add('open'); overlay.classList.add('show'); loadMyMessages(); }
-function closeMsg() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
-document.getElementById('msgToggle')?.addEventListener('click', openMsg);
-document.getElementById('msgClose')?.addEventListener('click', closeMsg);
-overlay?.addEventListener('click', closeMsg);
-function renderBubbles(messages) {
-if (!messages.length) {
-window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;">
-<div style="font-size:2rem; margin-bottom:8px;">💬</div>
-No messages yet. Say hello! 👋
-</div>`;
-return;
-}
-window_.innerHTML = messages.map(m => {
-const isOut = m.type === 'received';
-return `<div class="msg-row ${isOut ? 'out' : 'in'}">
+    const drawer  = document.getElementById('msgDrawer');
+    const overlay = document.getElementById('msgOverlay');
+    const window_ = document.getElementById('msgWindow');
+    const input   = document.getElementById('msgInput');
+    if (!drawer) return; // guest — skip
+
+    function openMsg()  { drawer.classList.add('open');    overlay.classList.add('show');    loadMyMessages(); }
+    function closeMsg() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
+
+    document.getElementById('msgToggle')?.addEventListener('click', openMsg);
+    document.getElementById('msgClose')?.addEventListener('click', closeMsg);
+    overlay?.addEventListener('click', closeMsg);
+
+    function renderBubbles(messages) {
+        if (!messages.length) {
+            window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;"><div style="font-size:2rem; margin-bottom:8px;">💬</div>No messages yet. Say hello! 👋</div>`;
+            return;
+        }
+        window_.innerHTML = messages.map(m => {
+            const isOut = m.type === 'received';
+            return `<div class="msg-row ${isOut ? 'out' : 'in'}">
 <div class="${isOut ? 'msg-bubble-out' : 'msg-bubble-in'}">${escapeHtml(m.text)}</div>
 <span class="msg-time">${m.time}</span>
 </div>`;
-}).join('');
-window_.scrollTop = window_.scrollHeight;
-}
-function escapeHtml(str) {
-return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-async function loadMyMessages() {
-window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;">Loading…</div>`;
-try {
-const res  = await fetch('/api/my-messages', { headers: { 'Accept': 'application/json' } });
-const data = await res.json();
-renderBubbles(data.messages || []);
-} catch {
-window_.innerHTML = `<div style="text-align:center; color:#ef4444; padding:2rem 0;">Failed to load. Try again.</div>`;
-}
-}
-window.sendMyMessage = async function () {
-const text = input?.value?.trim();
-if (!text) return;
-input.value = '';
-const row = document.createElement('div');
-row.className = 'msg-row out';
-row.innerHTML = `<div class="msg-bubble-out">${escapeHtml(text)}</div><span class="msg-time">Just now</span>`;
-window_.appendChild(row);
-window_.scrollTop = window_.scrollHeight;
-try {
-await fetch('/api/my-messages/send', {
-method:  'POST',
-headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
-body:    JSON.stringify({ text }),
-});
-} catch {
-row.querySelector('.msg-bubble-out').style.opacity = '0.5';
-}
-};
+        }).join('');
+        window_.scrollTop = window_.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function loadMyMessages() {
+        window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;">Loading…</div>`;
+        try {
+            const res  = await fetch('/api/my-messages', { headers: { 'Accept': 'application/json' } });
+            const data = await res.json();
+            renderBubbles(data.messages || []);
+        } catch {
+            window_.innerHTML = `<div style="text-align:center; color:#ef4444; padding:2rem 0;">Failed to load. Try again.</div>`;
+        }
+    }
+
+    window.sendMyMessage = async function () {
+        const text = input?.value?.trim();
+        if (!text) return;
+        input.value = '';
+        const row = document.createElement('div');
+        row.className = 'msg-row out';
+        row.innerHTML = `<div class="msg-bubble-out">${escapeHtml(text)}</div><span class="msg-time">Just now</span>`;
+        window_.appendChild(row);
+        window_.scrollTop = window_.scrollHeight;
+        try {
+            await fetch('/api/my-messages/send', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
+                body:    JSON.stringify({ text }),
+            });
+        } catch {
+            row.querySelector('.msg-bubble-out').style.opacity = '0.5';
+        }
+    };
 })();
+
 }); // end DOMContentLoaded
 </script>
 @endsection

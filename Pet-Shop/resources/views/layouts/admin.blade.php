@@ -48,22 +48,36 @@
         <nav class="flex-1 px-4 xl:px-6 space-y-1 overflow-y-auto custom-scrollbar">
             @php
                 $navItems = [
-                    ['url' => '/admin/dashboard', 'label' => 'Dashboard',     'icon' => '📊'],
-                    ['url' => '/admin/inventory',  'label' => 'Pet Inventory', 'icon' => '🐕'],
-                    ['url' => '/admin/supplies',   'label' => 'Pet Supplies',  'icon' => '🦴'],
-                    ['url' => '/admin/services',   'label' => 'Services',      'icon' => '✂️'],
-                    ['url' => '/admin/orders',     'label' => 'Orders',        'icon' => '📦'],
-                    ['url' => '/admin/messages',  'label' => 'Messages',      'icon' => '✉️'],
+                    ['url' => '/admin/dashboard',     'label' => 'Dashboard',     'icon' => '📊'],
+                    ['url' => '/admin/inventory',     'label' => 'Pet Inventory', 'icon' => '🐕'],
+                    ['url' => '/admin/supplies',      'label' => 'Pet Supplies',  'icon' => '🦴'],
+                    ['url' => '/admin/services',      'label' => 'Services',      'icon' => '✂️'],
+                    ['url' => '/admin/orders',        'label' => 'Orders',        'icon' => '📦'],
+                    ['url' => '/admin/sales-monitoring', 'label' => 'Sales Monitoring', 'icon' => '💰'],
+                    ['url' => '/admin/messages',      'label' => 'Messages',      'icon' => '✉️'],
                 ];
             @endphp
 
             @foreach($navItems as $item)
+            @php
+                // Determine if this nav item should be active
+                $isActive = false;
+                
+                if ($item['url'] === '/admin/sales-monitoring') {
+                    // Special handling for Sales Monitoring (matches both index and data routes)
+                    $isActive = request()->routeIs('admin.sales.*');
+                } else {
+                    // Standard URL matching for other items
+                    $isActive = request()->is(ltrim($item['url'], '/'));
+                }
+            @endphp
+            
             <a href="{{ $item['url'] }}"
                class="flex items-center gap-3 xl:gap-4 px-4 xl:px-6 py-3 xl:py-4 rounded-2xl transition-all duration-200
-               {{ request()->is(ltrim($item['url'], '/'))
-                  ? 'bg-[#E68A39] text-white font-bold shadow-md'
+               {{ $isActive 
+                  ? 'bg-[#E68A39] text-white font-bold shadow-md' 
                   : 'text-[#5C4D3C] hover:bg-[#EBD7BC] hover:text-[#2D241E]' }}">
-                <span class="text-lg xl:text-xl {{ request()->is(ltrim($item['url'], '/')) ? 'opacity-100' : 'opacity-70' }}">
+                <span class="text-lg xl:text-xl {{ $isActive ? 'opacity-100' : 'opacity-70' }}">
                     {{ $item['icon'] }}
                 </span>
                 <span class="text-sm tracking-tight">{{ $item['label'] }}</span>
@@ -71,7 +85,7 @@
             @endforeach
         </nav>
 
-        {{-- ✅ FIXED: Dynamic user info from Auth --}}
+        {{-- User Info & Logout --}}
         @auth
         @php
             $authUser   = Auth::user();
@@ -95,7 +109,6 @@
                 </div>
             </div>
 
-            {{-- Logout button --}}
             <form method="POST" action="{{ route('logout') }}" class="mt-4">
                 @csrf
                 <button type="submit"
@@ -120,7 +133,9 @@
                               d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
                 </button>
-                <span class="font-serif-brand text-lg sm:text-xl text-[#2D241E] opacity-60">Overview</span>
+                <span class="font-serif-brand text-lg sm:text-xl text-[#2D241E] opacity-60">
+                    @yield('page-title', 'Overview')
+                </span>
             </div>
 
             <div class="flex items-center gap-3">
@@ -142,5 +157,7 @@
         </div>
     </main>
 </div>
+
+@stack('scripts')
 </body>
 </html>

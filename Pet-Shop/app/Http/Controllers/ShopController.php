@@ -162,68 +162,76 @@ class ShopController extends Controller
     //  POST /shop/checkout
     //  Requires OTP to have been verified for the submitted email address.
     // ─────────────────────────────────────────────────────────────────────
-    public function placeOrder(Request $request)
-    {
-        $data = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'email'            => 'required|email',
-            'shipping_address' => 'nullable|string',
-            'payment_method'   => 'nullable|string',
-            'gcash_reference'  => 'nullable|string|size:13',
-            'items'            => 'required|array|min:1',
-            'items.*.name'     => 'required|string',
-            'items.*.emoji'    => 'nullable|string',
-            'items.*.qty'      => 'required|integer|min:1',
-            'items.*.price'    => 'required|numeric|min:0',
-        ]);
+public function placeOrder(Request $request)
+{
+    $data = $request->validate([
+        'customer_name'         => 'required|string|max:255',
+        'email'                 => 'required|email',
+        'shipping_address'      => 'nullable|string',
+        'payment_method'        => 'nullable|string',
+        'gcash_reference'       => 'nullable|string|size:13',
+        'items'                 => 'required|array|min:1',
+        'items.*.name'          => 'required|string',
+        'items.*.emoji'         => 'nullable|string',
+        'items.*.qty'           => 'required|integer|min:1',
+        'items.*.price'         => 'required|numeric|min:0',
+        // ↓ NEW: item type, source ID, and service booking date
+        'items.*.item_type'     => 'nullable|string|in:pet,supply,service',
+        'items.*.source_id'     => 'nullable|integer',
+        'items.*.scheduled_at'  => 'nullable|date|after:today',
+    ]);
 
-        // Guard: OTP must have been verified for this exact email
-        $verifiedEmail = Session::get('otp_verified');
-        if ($verifiedEmail !== $data['email']) {
-            return back()
-                ->withInput()
-                ->with('error', 'Your order could not be verified. Please complete OTP verification.');
-        }
-
-        // Create the order
-        $order = Order::create([
-            'order_number'     => Order::generateOrderNumber(),
-            'customer_name'    => $data['customer_name'],
-            'email'            => $data['email'],
-            'shipping_address' => $data['shipping_address'] ?? null,
-            'status'           => 'pending',
-            'ordered_at'       => now(),
-        ]);
-
-        foreach ($data['items'] as $item) {
-            $order->items()->create([
-                'item_name' => $item['name'],
-                'icon'      => $item['emoji'] ?? '📦',
-                'quantity'  => $item['qty'],
-                'price'     => $item['price'],
-            ]);
-        }
-
-        // Log activity
-        Activity::log(
-            'Order',
-            $order->customer_name,
-            'Purchased ' . collect($data['items'])->pluck('name')->implode(', '),
-            'Pending',
-            '🛒'
-        );
-
-        // Clear verification from session
-        Session::forget('otp_verified');
-
-        return redirect()
-            ->route('order.success')
-            ->with('order_id', $order->order_number);
+    // Guard: OTP must have been verified for this exact email
+    $verifiedEmail = Session::get('otp_verified');
+    if ($verifiedEmail !== $data['email']) {
+        return back()
+            ->withInput()
+            ->with('error', 'Your order could not be verified. Please complete OTP verification.');
     }
 
-    // ── SUCCESS PAGE ──────────────────────────────────────────────────────
-    public function success()
-    {
-        return view('order.success');
+    // Create the order
+    $order = Order::create([
+        'order_number'     => Order::generateOrderNumber(),
+        'customer_name'    => $data['customer_name'],
+        'email'            => $data['email'],
+        'shipping_address' => $data['shipping_address'] ?? null,
+        'status'           => 'pending',
+        'ordered_at'       => now(),
+    ]);
+
+    foreach ($data['items'] as $item) {
+        $order->items()->create([
+            'item_name'    => $item['name'],
+            'icon'         => $item['emoji'] ?? '📦',
+            'quantity'     => $item['qty'],
+            'price'        => $item['price'],
+            // ↓ NEW: save the three new columns
+            'item_type'    => $item['item_type']    ?? 'supply',
+            'source_id'    => $item['source_id']    ?? null,
+            'scheduled_at' => $item['scheduled_at'] ?? null,
+        ]);
     }
+
+    // Log activity
+    Activity::log(
+        'Order',
+        $order->customer_name,
+        'Purchased ' . collect($data['items'])->pluck('name')->implode(', '),
+        'Pending',
+        '🛒'
+    );
+
+    // Clear verification from session
+    Session::forget('otp_verified');
+
+    return redirect()
+        ->route('order.success')
+        ->with('order_id', $order->order_number);
+}
+
+// ── SUCCESS PAGE ──────────────────────────────────────────────────────
+public function success()
+{
+    return view('order.success');
+}
 }

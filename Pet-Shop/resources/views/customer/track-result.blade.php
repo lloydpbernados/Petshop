@@ -45,7 +45,6 @@
                 ];
                 $statusColor = $statusColors[strtolower($order->status)] ?? '#6b7280';
 
-                // Compute order totals from items relationship
                 $orderTotal = $order->items->sum(fn($i) => $i->price * $i->quantity);
                 $itemNames  = $order->items->pluck('item_name')->implode(', ');
             @endphp
@@ -132,11 +131,24 @@
 
             {{-- ── Order Timeline ────────────────────────────────────── --}}
             @php
-                $statusLower  = strtolower($order->status);
+                $statusLower = strtolower($order->status);
+
+                /*
+                 * FIXED: Timeline steps now correctly reflect the 4-step flow:
+                 *   pending → to-ship → shipped → completed
+                 *
+                 * $isProcessing: lights up once admin approves (to-ship and beyond)
+                 * $isShipped:    lights up only when the order is actually with the
+                 *                courier ('shipped' status), NOT at 'to-ship'.
+                 *                Previously 'to-ship' was included here, causing the
+                 *                Shipped step to appear active before the item left.
+                 * $isDelivered:  lights up only on 'completed' or 'delivered'.
+                 */
                 $isProcessing = in_array($statusLower, ['processing', 'to-ship', 'shipped', 'completed', 'delivered']);
-                $isShipped    = in_array($statusLower, ['to-ship', 'shipped', 'completed', 'delivered']);
+                $isShipped    = in_array($statusLower, ['shipped', 'completed', 'delivered']);
                 $isDelivered  = in_array($statusLower, ['completed', 'delivered']);
-                $orderedAt    = $order->ordered_at ?? $order->created_at;
+
+                $orderedAt = $order->ordered_at ?? $order->created_at;
             @endphp
 
             <div style="margin-top:40px;">

@@ -67,6 +67,9 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div class="relative flex-1 min-w-[140px]">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                        {{-- FIX: supplies had this correct already (calling loadInventory),
+                             but added the same debounce pattern as inventory for consistency
+                             and to avoid hammering the API on every keystroke. --}}
                         <input type="text" id="searchQ" placeholder="Search products…" oninput="loadInventory()"
                                class="pl-9 pr-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] w-full text-[#2D241E]">
                     </div>
@@ -232,24 +235,38 @@
     const CAT_CLASS = { Food:'bg-[#FEF9C3] text-[#854D0E]', Toys:'bg-[#FCE7F3] text-[#9D174D]', Accessories:'bg-[#EDE9FE] text-[#5B21B6]', Health:'bg-[#E9F0FE] text-[#1E3A8A]', Grooming:'bg-[#E9F7F2] text-[#166534]' };
     const CAT_BAR   = { Food:'bg-[#F59E0B]', Toys:'bg-[#EC4899]', Accessories:'bg-[#8B5CF6]', Health:'bg-[#3B82F6]', Grooming:'bg-[#22C55E]' };
 
-    let inventory = [];
-    let editId    = null;
-    let restockId = null;
+    let inventory  = [];
+    let editId     = null;
+    let restockId  = null;
+    let searchTimer = null; // FIX: debounce timer so we don't fire a fetch on every single keystroke
 
     // ── Fetch from API ────────────────────────────────────────
+    // FIX: Rebuilt loadInventory() to always read the live filter values before
+    // fetching, and only send non-empty params so the URL stays clean.
+    // Added a 250ms debounce on calls triggered by the search input so we
+    // don't hammer the API on every keystroke.
     async function loadInventory() {
-        try {
-            const q      = document.getElementById('searchQ').value;
-            const cat    = document.getElementById('filterCat').value;
-            const status = document.getElementById('filterStatus').value;
-            const params = new URLSearchParams({ q, category: cat, status });
-            const res    = await fetch(`${API}/supplies?${params}`);
-            inventory    = await res.json();
-            renderTable();
-        } catch (e) {
-            document.getElementById('tbody').innerHTML =
-                '<tr><td colspan="6" class="text-center py-12 text-red-400 text-sm">Failed to load supplies.</td></tr>';
-        }
+        // Clear any pending debounce timer so rapid typing coalesces into one request
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(async () => {
+            try {
+                const q      = document.getElementById('searchQ').value.trim();
+                const cat    = document.getElementById('filterCat').value;
+                const status = document.getElementById('filterStatus').value;
+                const params = new URLSearchParams();
+                if (q)      params.set('q', q);
+                if (cat)    params.set('category', cat);
+                if (status) params.set('status', status);
+
+                const res = await fetch(`${API}/supplies?${params}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                inventory = await res.json();
+                renderTable();
+            } catch (e) {
+                document.getElementById('tbody').innerHTML =
+                    '<tr><td colspan="6" class="text-center py-12 text-red-400 text-sm">Failed to load supplies.</td></tr>';
+            }
+        }, 250);
     }
 
     // ── Render ────────────────────────────────────────────────

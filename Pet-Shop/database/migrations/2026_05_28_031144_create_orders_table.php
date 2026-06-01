@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('customer_name');
             $table->string('email');
             $table->text('shipping_address')->nullable();
+            $table->decimal('total_amount', 10, 2)->default(0.00);
             $table->string('status')->default('pending');
             $table->string('payment_method')->default('cash');
             $table->string('gcash_reference')->nullable();

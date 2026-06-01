@@ -67,15 +67,19 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div class="relative flex-1 min-w-[140px]">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                        <input type="text" id="searchQ" placeholder="Search pets…" oninput="renderTable()"
+                        {{-- FIX: was calling renderTable() which only re-renders the in-memory array
+                             without sending the new search term to the API. Changed to loadInventory()
+                             so every keystroke re-fetches with the updated query params. --}}
+                        <input type="text" id="searchQ" placeholder="Search pets…" oninput="loadInventory()"
                                class="pl-9 pr-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] w-full text-[#2D241E]">
                     </div>
-                    <select id="filterCat" onchange="renderTable()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
+                    {{-- FIX: same issue — both dropdowns were calling renderTable() instead of loadInventory() --}}
+                    <select id="filterCat" onchange="loadInventory()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
                         <option value="">All Categories</option>
                         <option>Dogs</option><option>Cats</option><option>Birds</option>
                         <option>Small Pets</option><option>Fish</option><option>Reptiles</option>
                     </select>
-                    <select id="filterStatus" onchange="renderTable()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
+                    <select id="filterStatus" onchange="loadInventory()" class="px-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] text-[#5C4D3C] cursor-pointer">
                         <option value="">All Status</option>
                         <option value="ok">Available</option>
                         <option value="low">Few Left</option>
@@ -242,14 +246,23 @@
     let currentImg = null;
 
     // ── Load from API ─────────────────────────────────────────
+    // FIX: loadInventory() now always reads the current filter values before
+    // fetching, so search/category/status filters actually reach the API.
+    // Previously the search input called renderTable() which skipped the fetch
+    // entirely, meaning the API never received the query string.
     async function loadInventory() {
         try {
-            const q      = document.getElementById('searchQ').value;
+            const q      = document.getElementById('searchQ').value.trim();
             const cat    = document.getElementById('filterCat').value;
             const status = document.getElementById('filterStatus').value;
-            const params = new URLSearchParams({ q, category: cat, status });
-            const res    = await fetch(`${API}/pets?${params}`);
-            inventory    = await res.json();
+            const params = new URLSearchParams();
+            if (q)      params.set('q', q);
+            if (cat)    params.set('category', cat);
+            if (status) params.set('status', status);
+
+            const res = await fetch(`${API}/pets?${params}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            inventory = await res.json();
             renderTable();
         } catch (e) {
             document.getElementById('tbody').innerHTML =
@@ -449,7 +462,6 @@
         const btn = document.getElementById('saveBtn');
         btn.disabled = true; btn.innerText = 'Saving…';
 
-        // Use FormData to send file if one was picked
         const form = new FormData();
         form.append('name', name);
         form.append('category', cat);
@@ -465,7 +477,7 @@
         try {
             const url = editId ? `${API}/pets/${editId}` : `${API}/pets`;
             const res = await fetch(url, {
-                method:  'POST', // Laravel spoofing via _method=PUT
+                method:  'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF },
                 body:    form,
             });

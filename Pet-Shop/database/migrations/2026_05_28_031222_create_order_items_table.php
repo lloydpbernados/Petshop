@@ -13,8 +13,17 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
             $table->string('item_name');
             $table->string('icon')->default('📦');
+            
+            // Added item_type here
+            $table->string('item_type')->default('supply');
+            
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('price', 10, 2)->default(0.00);
+            
+            // Added service-related fields
+            $table->date('scheduled_at')->nullable();
+            $table->unsignedBigInteger('source_id')->nullable();
+            
             $table->timestamps();
         });
     }

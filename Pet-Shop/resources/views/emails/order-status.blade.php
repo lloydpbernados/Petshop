@@ -29,6 +29,7 @@
         .item-row:last-child { border-bottom: none; }
         .item-name { font-weight: 600; color: #2D241E; }
         .item-qty { font-size: 12px; color: #A68B6D; margin-top: 2px; }
+        .item-scheduled { font-size: 12px; color: #E68A39; margin-top: 2px; font-weight: 600; }
         .item-price { font-weight: 700; color: #E68A39; }
         .total-row { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 14px; border-top: 2px solid #F3E9DC; font-size: 15px; font-weight: 800; }
         .total-amt { color: #E68A39; font-size: 18px; }
@@ -54,10 +55,14 @@
             <span class="status-icon">✅</span>
             <div class="status-title">Order Approved!</div>
             <div class="status-sub">Your order is being prepared for shipment.</div>
-        @else
-            <span class="status-icon">📦</span>
+        @elseif($newStatus === 'shipped')
+            <span class="status-icon">🚚</span>
             <div class="status-title">Your Order Is On Its Way!</div>
             <div class="status-sub">Your items have been shipped and are heading to you.</div>
+        @elseif($newStatus === 'completed')
+            <span class="status-icon">🎉</span>
+            <div class="status-title">Order Delivered!</div>
+            <div class="status-sub">Your order has arrived. Enjoy! 🐾</div>
         @endif
     </div>
 
@@ -68,8 +73,10 @@
             Hi <strong>{{ $order->customer_name }}</strong>,<br><br>
             @if($newStatus === 'to-ship')
                 Great news! We've reviewed and approved your order. Our team is now carefully packing your items. You'll receive another update once your order ships.
-            @else
+            @elseif($newStatus === 'shipped')
                 Your order has been shipped! It's on its way to you. Please allow a few days for delivery depending on your location.
+            @elseif($newStatus === 'completed')
+                Your order has been marked as <strong>delivered</strong>. We hope you and your furry friend love everything! If you have any concerns, don't hesitate to reach out.
             @endif
         </p>
 
@@ -82,7 +89,12 @@
             </div>
             <div class="order-row">
                 <span>Status</span>
-                <span>{{ $newStatus === 'to-ship' ? 'Approved — Packing' : 'Shipped' }}</span>
+                <span>
+                    @if($newStatus === 'to-ship') Approved — Packing
+                    @elseif($newStatus === 'shipped') Shipped — In Transit
+                    @elseif($newStatus === 'completed') Delivered ✅
+                    @endif
+                </span>
             </div>
             <div class="order-row">
                 <span>Shipping To</span>
@@ -102,7 +114,11 @@
             <div class="item-row">
                 <div>
                     <div class="item-name">{{ $item->icon ?? '📦' }} {{ $item->item_name }}</div>
-                    <div class="item-qty">Qty: {{ $item->quantity }}</div>
+                    @if($item->item_type === 'service' && $item->scheduled_at)
+                        <div class="item-scheduled">📅 Appointment: {{ $item->scheduled_at->format('M j, Y') }}</div>
+                    @else
+                        <div class="item-qty">Qty: {{ $item->quantity }}</div>
+                    @endif
                 </div>
                 <div class="item-price">₱{{ number_format($item->price * $item->quantity, 2) }}</div>
             </div>
@@ -114,10 +130,12 @@
         </div>
         @endif
 
-        {{-- Track Button --}}
+        {{-- Track Button — hidden once delivered, nothing left to track --}}
+        @if($newStatus !== 'completed')
         <a href="{{ url('/track/' . $order->order_number) }}" class="track-btn">
             🔍 Track Your Order
         </a>
+        @endif
 
         {{-- Notice --}}
         <div class="notice">

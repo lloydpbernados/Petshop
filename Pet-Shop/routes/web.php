@@ -10,7 +10,7 @@ use App\Http\Controllers\Customer\OrderTrackingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\GuestReplyController;
-
+use App\Http\Controllers\SalesMonitoringController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,11 +43,14 @@ Route::get('/track',          [OrderTrackingController::class, 'form'])->name('o
 Route::post('/track/search',  [OrderTrackingController::class, 'search'])->name('order.track.search');
 Route::post('/track/ajax',    [OrderTrackingController::class, 'ajaxSearch'])->name('order.track.ajax');
 Route::get('/track/{number}', [OrderTrackingController::class, 'result'])->name('order.track.result');
+
 // Contact form (both guest + auth)
 Route::post('/contact', [App\Http\Controllers\ContactController::class, 'send'])
      ->name('contact.send');
+
 // 3D Customizer
 Route::get('/shop/3d', function () { return view('customer.3d-customizer'); })->name('shop.3d');
+
 // Order history
 Route::get('/shop/orders', function () { return view('customer.order-history'); })->name('shop.orders')->middleware('auth');
 
@@ -62,6 +65,7 @@ Route::middleware('auth')->group(function () {
 // Guest reply page
 Route::get('/guest-reply/{token}',  [App\Http\Controllers\GuestReplyController::class, 'show'])->name('guest.reply');
 Route::post('/guest-reply/{token}', [App\Http\Controllers\GuestReplyController::class, 'send'])->name('guest.reply.send');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes (Secured — auth middleware)
@@ -75,10 +79,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/orders',                   [AdminOrderController::class, 'index'])->name('orders');
     Route::patch('/orders/{number}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
     Route::get('/orders/export',            [AdminOrderController::class, 'exportCsv'])->name('orders.export');
+    Route::patch('/orders/{number}/cancel', [AdminOrderController::class, 'cancelOrder'])->name('orders.cancel');
+ 
+    // Sales Monitoring
+    Route::get('/sales-monitoring',           [SalesMonitoringController::class, 'index'])->name('sales.monitoring');
+    Route::get('/sales-monitoring/data',      [SalesMonitoringController::class, 'getData'])->name('sales.data');
 
     // Static Blade pages (data fetched via JS/API)
     Route::get('/inventory', fn() => view('admin.inventory'))->name('inventory');
     Route::get('/supplies',  fn() => view('admin.supplies'))->name('supplies');
     Route::get('/services',  fn() => view('admin.services'))->name('services');
     Route::get('/messages',  fn() => view('admin.messages'))->name('messages');
+
 });

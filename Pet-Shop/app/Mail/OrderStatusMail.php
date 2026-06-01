@@ -22,7 +22,10 @@ class OrderStatusMail extends Mailable
     {
         $subjects = [
             'to-ship'   => '✅ Your PawHaven Order Has Been Approved!',
-            'completed' => '📦 Your PawHaven Order Has Been Shipped!',
+            'shipped'   => '🚚 Your PawHaven Order Is On Its Way!',
+            'completed' => '🎉 Your PawHaven Order Has Been Delivered!',
+            'cancelled' => '❌ Your PawHaven Order Has Been Cancelled',
+
         ];
 
         return new Envelope(
@@ -34,6 +37,7 @@ class OrderStatusMail extends Mailable
     {
         return new Content(
             view: 'emails.order-status',
+            // $order and $newStatus are public so they're auto-passed to the view
         );
     }
 }

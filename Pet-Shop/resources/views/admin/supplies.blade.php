@@ -67,9 +67,6 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div class="relative flex-1 min-w-[140px]">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                        {{-- FIX: supplies had this correct already (calling loadInventory),
-                             but added the same debounce pattern as inventory for consistency
-                             and to avoid hammering the API on every keystroke. --}}
                         <input type="text" id="searchQ" placeholder="Search products…" oninput="loadInventory()"
                                class="pl-9 pr-3 py-2 sm:py-2.5 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#E68A39] w-full text-[#2D241E]">
                     </div>
@@ -129,12 +126,13 @@
 
 {{-- ADD/EDIT MODAL --}}
 <div id="itemModal" class="fixed inset-0 bg-[#2D241E]/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-4xl sm:rounded-[2.5rem] p-6 sm:p-8 w-full max-w-[480px] shadow-2xl transform transition-all overflow-y-auto max-h-[90vh]">
+    <div class="bg-white rounded-4xl sm:rounded-[2.5rem] p-6 sm:p-8 w-full max-w-[560px] shadow-2xl transform transition-all overflow-y-auto max-h-[90vh]">
         <div class="flex items-center justify-between mb-5 sm:mb-6">
             <h3 id="modalTitle" class="font-serif-brand text-xl sm:text-2xl text-[#2D241E]">Add New Item</h3>
             <button onclick="closeModal('itemModal')" class="text-gray-400 hover:text-[#2D241E] hover:bg-[#FDF8F1] p-2 rounded-xl transition-colors">✕</button>
         </div>
         <div class="space-y-3 sm:space-y-4">
+            {{-- Image --}}
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Product Image</label>
                 <div class="flex items-center gap-3 sm:gap-4">
@@ -151,42 +149,110 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Name --}}
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Product Name</label>
-                <input id="mName" type="text" placeholder="e.g. Organic Cat Nip" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                <input id="mName" type="text" placeholder="e.g. Organic Cat Food"
+                       class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
             </div>
+
+            {{-- Category + SKU --}}
             <div class="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Category</label>
-                    <select id="mCat" class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm">
+                    <select id="mCat" onchange="generateSku(); toggleWeightOptions();" class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm">
                         <option value="">Select…</option>
                         <option>Food</option><option>Toys</option>
                         <option>Accessories</option><option>Health</option><option>Grooming</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">SKU</label>
-                    <input id="mSku" type="text" placeholder="e.g. PS-001" class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                    <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">
+                        SKU
+                        <span class="text-[9px] font-normal text-[#A68B6D] ml-1">(auto)</span>
+                    </label>
+                    <input id="mSku" type="text" placeholder="Auto-generated"
+                           class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm font-mono"/>
                 </div>
             </div>
+
+            {{-- ══════════════════════════════════════════════════════
+                 WEIGHT OPTIONS — shown only when Category = Food
+                 Admin defines available kg sizes and the price for each.
+                 Stored as JSON: [{ kg: 1, price: 250 }, { kg: 3, price: 650 }, ...]
+            ════════════════════════════════════════════════════════ --}}
+            <div id="weightOptionsSection" class="hidden">
+                <div class="bg-[#FFF8E1] border border-[#FDE68A] rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider">⚖️ Weight Options (kg)</label>
+                            <p class="text-[10px] text-[#92400E] mt-1">Define available bag sizes and their individual prices. Customers will pick one when ordering.</p>
+                        </div>
+                        <button type="button" onclick="addWeightRow()"
+                                class="px-3 py-1.5 bg-[#E68A39] text-white rounded-xl text-xs font-bold hover:bg-[#cf7529] transition-colors shrink-0">
+                            + Add Size
+                        </button>
+                    </div>
+
+                    {{-- Column headers --}}
+                    <div class="grid grid-cols-[80px_1fr_36px] gap-2 mb-2 px-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Weight</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Price (₱)</span>
+                        <span></span>
+                    </div>
+
+                    {{-- Dynamic rows --}}
+                    <div id="weightRowsContainer" class="space-y-2"></div>
+
+                    {{-- Empty hint --}}
+                    <p id="weightEmptyHint" class="text-[11px] text-gray-400 text-center py-2 hidden">
+                        No sizes yet — click "+ Add Size" to start.
+                    </p>
+
+                    {{-- Base price note --}}
+                    <p class="text-[10px] text-[#A68B6D] mt-3 border-t border-[#FDE68A] pt-2">
+                        💡 The "Unit Price" field above will be used as the default/fallback price when no weight is selected.
+                        Each weight option can override it with its own price.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Stock + Price --}}
             <div class="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Stock Qty</label>
-                    <input id="mStock" type="number" placeholder="0" min="0" class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                    <input id="mStock" type="number" placeholder="0" min="0"
+                           class="w-full px-3 sm:px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Unit Price</label>
+                    <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">
+                        Unit Price
+                        <span id="priceSubLabel" class="text-[9px] font-normal text-[#A68B6D] ml-1"></span>
+                    </label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₱</span>
-                        <input id="mPrice" type="number" placeholder="0.00" step="0.01" min="0" class="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                        <input id="mPrice" type="number" placeholder="0.00" step="0.01" min="0"
+                               class="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
                     </div>
                 </div>
             </div>
+
+            {{-- Low Stock Alert --}}
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Low Stock Alert at</label>
-                <input id="mThresh" type="number" placeholder="5" min="1" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                <input id="mThresh" type="number" placeholder="5" min="1"
+                       class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+            </div>
+
+            {{-- Description --}}
+            <div>
+                <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Description</label>
+                <textarea id="mDesc" rows="3" placeholder="Describe the product…"
+                          class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] resize-none text-sm"></textarea>
             </div>
         </div>
+
         <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
             <button onclick="closeModal('itemModal')" class="flex-1 px-4 sm:px-6 py-3 border border-[#EBD7BC] text-[#5C4D3C] rounded-xl font-bold hover:bg-[#FDF8F1] transition-colors text-sm">Cancel</button>
             <button onclick="saveItem()" id="saveBtn" class="flex-1 px-4 sm:px-6 py-3 bg-[#E68A39] text-white rounded-xl font-bold shadow-md hover:bg-[#cf7529] transition-colors text-sm">Save Item</button>
@@ -211,11 +277,13 @@
         <div class="space-y-3 sm:space-y-4">
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Quantity to Add</label>
-                <input id="rQty" type="number" placeholder="Enter quantity" min="1" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                <input id="rQty" type="number" placeholder="Enter quantity" min="1"
+                       class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
             </div>
             <div>
                 <label class="block text-xs font-bold text-[#5C4D3C] uppercase tracking-wider mb-2">Supplier / Note</label>
-                <input id="rNote" type="text" placeholder="e.g. Royal Canin PH" class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
+                <input id="rNote" type="text" placeholder="e.g. Royal Canin PH"
+                       class="w-full px-4 py-3 bg-[#FDF8F1] border border-[#F3E9DC] rounded-xl focus:outline-none focus:border-[#E68A39] text-[#2D241E] text-sm"/>
             </div>
         </div>
         <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
@@ -231,22 +299,130 @@
     const API  = '/api/v1';
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    const CAT_EMOJI = { Food:'🍖', Toys:'🎾', Accessories:'🎀', Health:'💊', Grooming:'🪮' };
-    const CAT_CLASS = { Food:'bg-[#FEF9C3] text-[#854D0E]', Toys:'bg-[#FCE7F3] text-[#9D174D]', Accessories:'bg-[#EDE9FE] text-[#5B21B6]', Health:'bg-[#E9F0FE] text-[#1E3A8A]', Grooming:'bg-[#E9F7F2] text-[#166534]' };
-    const CAT_BAR   = { Food:'bg-[#F59E0B]', Toys:'bg-[#EC4899]', Accessories:'bg-[#8B5CF6]', Health:'bg-[#3B82F6]', Grooming:'bg-[#22C55E]' };
+    const CAT_EMOJI  = { Food:'🍖', Toys:'🎾', Accessories:'🎀', Health:'💊', Grooming:'🪮' };
+    const CAT_CLASS  = { Food:'bg-[#FEF9C3] text-[#854D0E]', Toys:'bg-[#FCE7F3] text-[#9D174D]', Accessories:'bg-[#EDE9FE] text-[#5B21B6]', Health:'bg-[#E9F0FE] text-[#1E3A8A]', Grooming:'bg-[#E9F7F2] text-[#166534]' };
+    const CAT_BAR    = { Food:'bg-[#F59E0B]', Toys:'bg-[#EC4899]', Accessories:'bg-[#8B5CF6]', Health:'bg-[#3B82F6]', Grooming:'bg-[#22C55E]' };
+    const CAT_PREFIX = { Food:'FD', Toys:'TY', Accessories:'AC', Health:'HL', Grooming:'GR' };
 
-    let inventory  = [];
-    let editId     = null;
-    let restockId  = null;
-    let searchTimer = null; // FIX: debounce timer so we don't fire a fetch on every single keystroke
+    let inventory   = [];
+    let editId      = null;
+    let restockId   = null;
+    let searchTimer = null;
 
-    // ── Fetch from API ────────────────────────────────────────
-    // FIX: Rebuilt loadInventory() to always read the live filter values before
-    // fetching, and only send non-empty params so the URL stays clean.
-    // Added a 250ms debounce on calls triggered by the search input so we
-    // don't hammer the API on every keystroke.
+    // ── Weight Options helpers ────────────────────────────────────────────────
+
+    /**
+     * Shows/hides the weight options panel based on the selected category.
+     * Also updates the Unit Price sub-label for clarity.
+     */
+    function toggleWeightOptions() {
+        const cat     = document.getElementById('mCat').value;
+        const section = document.getElementById('weightOptionsSection');
+        const subLbl  = document.getElementById('priceSubLabel');
+
+        if (cat === 'Food') {
+            section.classList.remove('hidden');
+            subLbl.textContent = '(base / fallback)';
+            refreshWeightEmptyHint();
+        } else {
+            section.classList.add('hidden');
+            subLbl.textContent = '';
+        }
+    }
+
+    /** Adds a new editable weight row to the container. */
+    function addWeightRow(kg = '', price = '') {
+        const container = document.getElementById('weightRowsContainer');
+        const idx       = Date.now(); // unique key for the row
+
+        const row = document.createElement('div');
+        row.className    = 'grid grid-cols-[80px_1fr_36px] gap-2 items-center weight-row';
+        row.dataset.idx  = idx;
+        row.innerHTML = `
+            <div class="relative">
+                <input type="number" min="0.1" step="0.1" placeholder="e.g. 1"
+                       value="${kg}"
+                       class="w-full px-3 py-2.5 bg-white border border-[#F3E9DC] rounded-xl text-sm focus:outline-none focus:border-[#E68A39] text-[#2D241E] weight-kg-input"
+                       oninput="refreshWeightEmptyHint()">
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400 pointer-events-none">kg</span>
+            </div>
+            <div class="relative">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">₱</span>
+                <input type="number" min="0" step="0.01" placeholder="0.00"
+                       value="${price}"
+                       class="w-full pl-7 pr-3 py-2.5 bg-white border border-[#F3E9DC] rounded-xl text-sm focus:outline-none focus:border-[#E68A39] text-[#2D241E] weight-price-input">
+            </div>
+            <button type="button" onclick="removeWeightRow(this)"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors text-sm font-bold">
+                ✕
+            </button>`;
+
+        container.appendChild(row);
+        document.getElementById('weightEmptyHint').classList.add('hidden');
+        row.querySelector('.weight-kg-input').focus();
+    }
+
+    /** Removes a weight row. */
+    function removeWeightRow(btn) {
+        btn.closest('.weight-row').remove();
+        refreshWeightEmptyHint();
+    }
+
+    /** Shows empty hint when no rows exist. */
+    function refreshWeightEmptyHint() {
+        const rows = document.querySelectorAll('#weightRowsContainer .weight-row');
+        document.getElementById('weightEmptyHint').classList.toggle('hidden', rows.length > 0);
+    }
+
+    /**
+     * Reads all weight rows and returns a sorted array like:
+     * [{ kg: 1, price: 250 }, { kg: 3, price: 650 }]
+     * Returns null if category is not Food.
+     * Returns [] if no rows (no weight options set).
+     */
+    function collectWeightOptions() {
+        if (document.getElementById('mCat').value !== 'Food') return null;
+
+        const rows = document.querySelectorAll('#weightRowsContainer .weight-row');
+        const opts = [];
+
+        rows.forEach(row => {
+            const kg    = parseFloat(row.querySelector('.weight-kg-input').value);
+            const price = parseFloat(row.querySelector('.weight-price-input').value);
+            if (!isNaN(kg) && kg > 0 && !isNaN(price) && price >= 0) {
+                opts.push({ kg, price });
+            }
+        });
+
+        // Sort by weight ascending
+        opts.sort((a, b) => a.kg - b.kg);
+        return opts;
+    }
+
+    /**
+     * Populates weight rows in the modal from a JSON array.
+     * Called when editing an existing food item.
+     */
+    function loadWeightRows(opts) {
+        const container = document.getElementById('weightRowsContainer');
+        container.innerHTML = '';
+        if (!Array.isArray(opts) || !opts.length) { refreshWeightEmptyHint(); return; }
+        opts.forEach(o => addWeightRow(o.kg, o.price));
+    }
+
+    // ── SKU auto-generator ───────────────────────────────────────────────────
+    function generateSku() {
+        if (editId) return;
+        const cat = document.getElementById('mCat').value;
+        if (!cat) return;
+        const prefix   = CAT_PREFIX[cat] || cat.substring(0, 2).toUpperCase();
+        const existing = inventory.filter(i => i.category === cat).length;
+        const nextNum  = String(existing + 1).padStart(3, '0');
+        document.getElementById('mSku').value = `${prefix}-${nextNum}`;
+    }
+
+    // ── Inventory loading ────────────────────────────────────────────────────
     async function loadInventory() {
-        // Clear any pending debounce timer so rapid typing coalesces into one request
         clearTimeout(searchTimer);
         searchTimer = setTimeout(async () => {
             try {
@@ -269,7 +445,6 @@
         }, 250);
     }
 
-    // ── Render ────────────────────────────────────────────────
     function renderTable() {
         const tbody = document.getElementById('tbody');
         let rows = '', count = 0;
@@ -282,6 +457,13 @@
                 ? `<img src="${item.image}" class="w-full h-full object-cover">`
                 : `<span class="text-base sm:text-xl">${em}</span>`;
 
+            // Weight options badge for food items
+            let weightBadge = '';
+            if (item.category === 'Food' && Array.isArray(item.weight_options) && item.weight_options.length) {
+                const sizes = item.weight_options.map(o => `${o.kg}kg`).join(', ');
+                weightBadge = `<div class="text-[10px] text-[#92400E] bg-[#FEF9C3] border border-[#FDE68A] rounded-lg px-2 py-0.5 mt-1 font-bold inline-flex items-center gap-1">⚖️ ${sizes}</div>`;
+            }
+
             rows += `
             <tr class="hover:bg-[#FDF8F1]/60 transition-colors group">
               <td class="px-4 sm:px-6 py-3 sm:py-4">
@@ -290,6 +472,8 @@
                   <div>
                     <div class="font-bold text-[#2D241E] text-xs sm:text-sm">${item.name}</div>
                     <div class="text-[10px] text-gray-400 font-mono mt-0.5">${item.sku ?? ''}</div>
+                    ${item.description ? `<div class="text-[10px] text-gray-400 mt-0.5 max-w-[200px] truncate">${item.description}</div>` : ''}
+                    ${weightBadge}
                   </div>
                 </div>
               </td>
@@ -392,7 +576,6 @@
             </div>`).join('');
     }
 
-    // ── Stock Adjust ──────────────────────────────────────────
     async function adjustStock(id, delta) {
         try {
             const res  = await fetch(`${API}/supplies/${id}/stock`, {
@@ -407,15 +590,20 @@
         } catch (e) { showToast('Failed to update stock.', 'error'); }
     }
 
-    // ── Add / Edit ────────────────────────────────────────────
+    // ── Modal open/close ──────────────────────────────────────────────────────
     function openAddModal() {
         editId = null;
         document.getElementById('modalTitle').textContent = 'Add New Item';
-        ['mName','mSku','mStock','mPrice','mThresh'].forEach(i => document.getElementById(i).value = '');
+        ['mName','mSku','mStock','mPrice','mThresh','mDesc'].forEach(i => document.getElementById(i).value = '');
         document.getElementById('mCat').value = '';
         document.getElementById('imagePreview').classList.add('hidden');
         document.getElementById('imagePreview').src = '#';
         document.getElementById('previewPlaceholder').classList.remove('hidden');
+        // Reset weight options
+        document.getElementById('weightRowsContainer').innerHTML = '';
+        document.getElementById('weightOptionsSection').classList.add('hidden');
+        document.getElementById('priceSubLabel').textContent = '';
+        refreshWeightEmptyHint();
         document.getElementById('itemModal').classList.replace('hidden','flex');
     }
 
@@ -430,6 +618,9 @@
         document.getElementById('mStock').value  = item.stock;
         document.getElementById('mPrice').value  = item.price;
         document.getElementById('mThresh').value = item.thresh;
+        document.getElementById('mDesc').value   = item.description ?? '';
+
+        // Image
         if (item.image) {
             document.getElementById('imagePreview').src = item.image;
             document.getElementById('imagePreview').classList.remove('hidden');
@@ -438,6 +629,14 @@
             document.getElementById('imagePreview').classList.add('hidden');
             document.getElementById('previewPlaceholder').classList.remove('hidden');
         }
+
+        // Weight options — show section + load rows if Food
+        document.getElementById('weightRowsContainer').innerHTML = '';
+        toggleWeightOptions();
+        if (item.category === 'Food') {
+            loadWeightRows(item.weight_options ?? []);
+        }
+
         document.getElementById('itemModal').classList.replace('hidden','flex');
     }
 
@@ -455,6 +654,7 @@
         }
     }
 
+    // ── Save item ─────────────────────────────────────────────────────────────
     async function saveItem() {
         const name   = document.getElementById('mName').value.trim();
         const cat    = document.getElementById('mCat').value;
@@ -462,8 +662,19 @@
         const price  = parseFloat(document.getElementById('mPrice').value) || 0;
         const thresh = parseInt(document.getElementById('mThresh').value) || 5;
         const sku    = document.getElementById('mSku').value.trim();
+        const desc   = document.getElementById('mDesc').value.trim();
 
         if (!name || !cat) { showToast('Name and category are required.', 'error'); return; }
+
+        // Collect weight options for Food category
+        const weightOptions = collectWeightOptions();
+
+        // Validate: if Food and weight rows exist, all must be complete
+        if (weightOptions !== null && weightOptions.length === 0 &&
+            document.querySelectorAll('#weightRowsContainer .weight-row').length > 0) {
+            showToast('Fill in all weight rows (kg + price) or remove incomplete ones.', 'error');
+            return;
+        }
 
         const btn = document.getElementById('saveBtn');
         btn.disabled = true; btn.innerText = 'Saving…';
@@ -474,7 +685,14 @@
         form.append('stock', stock);
         form.append('price', price);
         form.append('low_stock_threshold', thresh);
-        if (sku) form.append('sku', sku);
+        if (sku)  form.append('sku', sku);
+        if (desc) form.append('description', desc);
+
+        // Append weight_options as JSON string (backend will decode it)
+        if (weightOptions !== null) {
+            form.append('weight_options', JSON.stringify(weightOptions));
+        }
+
         const fileInput = document.getElementById('mImage');
         if (fileInput.files[0]) form.append('image', fileInput.files[0]);
         if (editId) form.append('_method', 'PUT');
@@ -498,7 +716,7 @@
         }
     }
 
-    // ── Restock ───────────────────────────────────────────────
+    // ── Restock modal ─────────────────────────────────────────────────────────
     function openRestockModal(id) {
         const item = inventory.find(i => i.id === id);
         if (!item) return;
@@ -534,7 +752,6 @@
         } catch (e) { showToast('Failed to restock.', 'error'); }
     }
 
-    // ── Delete ────────────────────────────────────────────────
     async function deleteItem(id) {
         const item = inventory.find(i => i.id === id);
         if (!item || !confirm(`Remove "${item.name}" from inventory?`)) return;
@@ -563,8 +780,13 @@
     }
 
     function exportCSV() {
-        const header = 'Product,SKU,Category,Stock,Price\n';
-        const rows   = inventory.map(i => `"${i.name}","${i.sku??''}","${i.category}",${i.stock},${i.price}`).join('\n');
+        const header = 'Product,SKU,Category,Stock,Price,Weight Options,Description\n';
+        const rows   = inventory.map(i => {
+            const wo = (Array.isArray(i.weight_options) && i.weight_options.length)
+                ? i.weight_options.map(o => `${o.kg}kg@₱${o.price}`).join(' | ')
+                : '';
+            return `"${i.name}","${i.sku??''}","${i.category}",${i.stock},${i.price},"${wo}","${i.description??''}"`;
+        }).join('\n');
         const blob   = new Blob([header+rows], { type:'text/csv' });
         const a      = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download   = 'supplies-inventory.csv'; a.click();

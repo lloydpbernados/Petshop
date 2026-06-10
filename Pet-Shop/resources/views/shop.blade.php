@@ -30,7 +30,6 @@
 }
 html { scroll-behavior: smooth; }
 body { background: var(--cream); color: var(--brown); font-family: 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
-/* ── Customer message bubbles ── */
 .msg-bubble-out { align-self: flex-end; background: var(--orange); color: #fff; padding: 10px 14px; border-radius: 18px 18px 4px 18px; max-width: 80%; font-size: 0.88rem; line-height: 1.5; box-shadow: 0 2px 8px rgba(230,138,57,0.3); }
 .msg-bubble-in { align-self: flex-start; background: var(--cream-mid); color: var(--brown); padding: 10px 14px; border-radius: 18px 18px 18px 4px; max-width: 80%; font-size: 0.88rem; line-height: 1.5; border: 1px solid var(--border); }
 .msg-time { font-size: 0.7rem; color: var(--brown-muted); margin-top: 4px; }
@@ -62,7 +61,6 @@ body { background: var(--cream); color: var(--brown); font-family: 'Segoe UI', s
 .guest-dropdown-item:hover { background: var(--cream); color: var(--orange); }
 .guest-dropdown-item .item-icon { font-size: 1rem; width: 22px; text-align: center; }
 .guest-dropdown-divider { height: 1px; background: var(--border); margin: 4px 6px; }
-/* ── USER DROPDOWN (AUTHENTICATED) ── */
 .user-dropdown { position: relative; }
 .user-dropdown-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: 1.5px solid var(--border); padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; color: var(--brown); cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
 .user-dropdown-toggle:hover { border-color: var(--orange); color: var(--orange); background: #FFF8F0; }
@@ -153,6 +151,7 @@ body { background: var(--cream); color: var(--brown); font-family: 'Segoe UI', s
 .cart-item-info { flex: 1; min-width: 0; }
 .cart-item-name { font-weight: 700; color: var(--brown); font-size: 0.92rem; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-item-price { font-size: 0.9rem; color: var(--orange); font-weight: 700; }
+.cart-item-date { font-size: 0.75rem; color: var(--brown-muted); font-weight: 600; margin-top: 2px; }
 .cart-qty-wrap { display: flex; align-items: center; gap: 0.45rem; flex-shrink: 0; }
 .cart-qty-wrap button { width: 26px; height: 26px; border: 1.5px solid var(--border); background: var(--white); border-radius: 7px; cursor: pointer; font-weight: 800; font-size: 0.85rem; transition: all 0.15s; color: var(--brown); }
 .cart-qty-wrap button:hover { background: var(--cream); border-color: var(--orange); }
@@ -213,6 +212,300 @@ body { background: var(--cream); color: var(--brown); font-family: 'Segoe UI', s
 #proceedToOtpBtn, #placeOrderBtn { width: 100%; background: var(--orange); color: var(--white); border: none; padding: 13px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: background 0.2s, transform 0.15s; letter-spacing: 0.02em; }
 #proceedToOtpBtn:hover, #placeOrderBtn:hover { background: var(--orange-dark); transform: translateY(-1px); }
 #proceedToOtpBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* ══════════════════════════════════════
+   WEIGHT / KG SELECTOR MODAL
+   Appears when a Food item's "Choose Size" button is clicked.
+══════════════════════════════════════ */
+#weightModal {
+    position: fixed; inset: 0;
+    background: rgba(45,36,30,0.55);
+    z-index: 10500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.22s, visibility 0.22s;
+}
+#weightModal.open { opacity: 1; visibility: visible; }
+.weight-modal-box {
+    background: var(--white);
+    border-radius: 2rem;
+    width: 100%; max-width: 440px;
+    max-height: 88vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(14px);
+    transition: transform 0.22s;
+}
+#weightModal.open .weight-modal-box { transform: translateY(0); }
+
+.weight-modal-header {
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    background: linear-gradient(135deg, #FFF8F0, var(--cream));
+    border-radius: 2rem 2rem 0 0;
+}
+.weight-modal-header-left { display: flex; align-items: center; gap: 0.9rem; }
+.weight-modal-icon {
+    width: 52px; height: 52px; border-radius: var(--radius-sm);
+    background: var(--cream-mid); display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; flex-shrink: 0; overflow: hidden;
+}
+.weight-modal-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.weight-modal-header-text h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--brown); line-height: 1.25; }
+.weight-modal-header-text p { font-size: 0.82rem; color: var(--brown-muted); margin-top: 2px; }
+.weight-modal-close {
+    background: var(--cream); border: 1.5px solid var(--border);
+    width: 30px; height: 30px; border-radius: 99px;
+    font-size: 0.95rem; cursor: pointer; color: var(--brown-muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+}
+.weight-modal-close:hover { background: var(--border); color: var(--brown); }
+
+.weight-modal-body { padding: 1.5rem 1.75rem; }
+.weight-step-label {
+    font-size: 0.7rem; font-weight: 800; color: var(--brown-muted);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 0.85rem;
+}
+
+/* Size option cards */
+.weight-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+}
+.weight-option-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 0.5rem;
+    text-align: center; cursor: pointer;
+    transition: all 0.18s; background: var(--white);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    position: relative;
+}
+.weight-option-card:hover {
+    border-color: var(--orange); background: #FFFAF5;
+}
+.weight-option-card.selected {
+    border-color: var(--orange); background: #FFF3E5;
+    box-shadow: 0 0 0 3px var(--orange-glow);
+}
+.weight-option-card.selected::after {
+    content: '✓';
+    position: absolute; top: 6px; right: 8px;
+    font-size: 0.65rem; font-weight: 800;
+    color: var(--orange);
+}
+.woc-kg   { font-size: 1.4rem; font-weight: 800; color: var(--brown); line-height: 1; }
+.woc-unit { font-size: 0.68rem; font-weight: 700; color: var(--brown-muted); text-transform: uppercase; }
+.woc-price { font-size: 0.88rem; font-weight: 800; color: var(--orange); margin-top: 2px; }
+
+/* Selected summary */
+.weight-selected-summary {
+    background: linear-gradient(135deg, #FFF3E5, #FFF8F1);
+    border: 1.5px solid var(--border-mid);
+    border-radius: var(--radius-md); padding: 0.9rem 1.1rem;
+    margin-bottom: 1.25rem; display: none;
+    align-items: center; gap: 0.75rem;
+}
+.weight-selected-summary.show { display: flex; }
+.wss-icon { font-size: 1.4rem; }
+.wss-text { flex: 1; }
+.wss-label { font-size: 0.7rem; font-weight: 800; color: var(--brown-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.wss-detail { font-size: 0.95rem; font-weight: 800; color: var(--brown); }
+
+/* Qty row */
+.weight-qty-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: var(--radius-md); padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+}
+.weight-qty-label { font-size: 0.85rem; font-weight: 700; color: var(--brown); }
+.weight-qty-ctrl { display: flex; align-items: center; gap: 0.5rem; }
+.weight-qty-ctrl button {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--white);
+    font-weight: 800; font-size: 1rem; cursor: pointer;
+    transition: all 0.15s; color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+}
+.weight-qty-ctrl button:hover { background: var(--cream-mid); border-color: var(--orange); }
+.weight-qty-ctrl span { font-size: 1rem; font-weight: 800; color: var(--brown); min-width: 24px; text-align: center; }
+
+/* CTA buttons */
+.weight-add-btn {
+    width: 100%; background: var(--orange); color: white;
+    border: none; padding: 13px; border-radius: var(--radius-md);
+    font-size: 0.97rem; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.weight-add-btn:hover:not(:disabled) { background: var(--orange-dark); transform: translateY(-1px); }
+.weight-add-btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+.weight-cancel-btn {
+    width: 100%; background: transparent; color: var(--brown-sub);
+    border: 1.5px solid var(--border); padding: 11px;
+    border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; margin-top: 0.55rem;
+}
+.weight-cancel-btn:hover { background: var(--cream); border-color: var(--border-mid); }
+
+/* Inline kg badge on food cards */
+.food-sizes-row {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;
+}
+.food-size-pill {
+    font-size: 0.68rem; font-weight: 700;
+    background: #FEF9C3; color: #92400E;
+    border: 1px solid #FDE68A;
+    padding: 2px 7px; border-radius: 99px;
+}
+
+/* SERVICE BOOKING MODAL STYLES (unchanged) */
+#serviceBookingModal {
+    position: fixed; inset: 0;
+    background: rgba(45,36,30,0.6);
+    z-index: 10500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+}
+#serviceBookingModal.open { opacity: 1; visibility: visible; }
+.booking-modal-box {
+    background: var(--white);
+    border-radius: 2rem;
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(16px);
+    transition: transform 0.25s;
+}
+#serviceBookingModal.open .booking-modal-box { transform: translateY(0); }
+.booking-modal-header {
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    background: linear-gradient(135deg, #FFF8F0, var(--cream));
+    border-radius: 2rem 2rem 0 0;
+}
+.booking-modal-header-text h3 {
+    font-family: var(--serif);
+    font-size: 1.4rem; color: var(--brown); line-height: 1.2;
+}
+.booking-modal-header-text p { font-size: 0.85rem; color: var(--brown-muted); margin-top: 3px; }
+.booking-modal-close {
+    background: var(--cream); border: 1.5px solid var(--border);
+    width: 32px; height: 32px; border-radius: 99px;
+    font-size: 1rem; cursor: pointer; color: var(--brown-muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+}
+.booking-modal-close:hover { background: var(--border); color: var(--brown); }
+.booking-modal-body { padding: 1.5rem 1.75rem; }
+.booking-service-banner {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: var(--radius-md); padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.booking-service-icon {
+    width: 52px; height: 52px; border-radius: var(--radius-sm);
+    background: var(--cream-mid); display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; flex-shrink: 0; overflow: hidden;
+}
+.booking-service-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.booking-service-name { font-weight: 800; color: var(--brown); font-size: 1rem; }
+.booking-service-price { font-size: 0.9rem; color: var(--orange); font-weight: 700; margin-top: 2px; }
+.booking-step-label {
+    font-size: 0.7rem; font-weight: 800; color: var(--brown-muted);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem;
+}
+.booking-step-label::before {
+    content: '';
+    display: inline-block; width: 18px; height: 18px;
+    background: var(--orange); color: white; border-radius: 50%;
+    font-size: 0.65rem; font-weight: 800; line-height: 18px; text-align: center;
+}
+.booking-step-label.step-1::before { content: '1'; }
+.booking-step-label.step-2::before { content: '2'; }
+.booking-dates-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.6rem; margin-bottom: 1.5rem;
+}
+.booking-date-card {
+    border: 2px solid var(--border); border-radius: var(--radius-md);
+    padding: 0.75rem 0.5rem; text-align: center; cursor: pointer;
+    transition: all 0.18s; background: var(--white);
+    display: flex; flex-direction: column; gap: 2px;
+}
+.booking-date-card:hover:not(.full):not(.closed-date) {
+    border-color: var(--orange); background: #FFFAF5;
+}
+.booking-date-card.selected {
+    border-color: var(--orange); background: #FFF3E5;
+    box-shadow: 0 0 0 3px var(--orange-glow);
+}
+.booking-date-card.full { opacity: 0.45; cursor: not-allowed; }
+.booking-date-card.closed-date { opacity: 0.35; cursor: not-allowed; }
+.date-card-day { font-size: 0.7rem; font-weight: 800; color: var(--brown-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.date-card-num { font-size: 1.35rem; font-weight: 800; color: var(--brown); line-height: 1; }
+.date-card-month { font-size: 0.72rem; font-weight: 700; color: var(--brown-sub); }
+.date-card-slots { font-size: 0.65rem; font-weight: 700; margin-top: 4px; padding: 2px 7px; border-radius: 99px; }
+.date-card-slots.available { background: #DCFCE7; color: #166534; }
+.date-card-slots.scarce    { background: #FEF3C7; color: #92400E; }
+.date-card-slots.full-tag  { background: #FEE2E2; color: #991B1B; }
+.booking-no-slots {
+    text-align: center; padding: 2.5rem 1rem;
+    background: var(--cream); border-radius: var(--radius-md);
+    border: 1.5px dashed var(--border); margin-bottom: 1.5rem;
+    color: var(--brown-muted);
+}
+.booking-no-slots .no-slots-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.booking-no-slots p { font-size: 0.9rem; font-weight: 600; }
+.booking-no-slots small { font-size: 0.8rem; color: var(--brown-muted); }
+.booking-selected-summary {
+    background: linear-gradient(135deg, #FFF3E5, #FFF8F1);
+    border: 1.5px solid var(--border-mid);
+    border-radius: var(--radius-md); padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem; display: none;
+}
+.booking-selected-summary.show { display: block; }
+.booking-selected-summary-label { font-size: 0.72rem; font-weight: 800; color: var(--brown-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+.booking-selected-summary-date { font-size: 1rem; font-weight: 800; color: var(--brown); }
+.booking-selected-summary-slots { font-size: 0.82rem; color: var(--brown-muted); margin-top: 2px; }
+.booking-add-btn {
+    width: 100%; background: var(--orange); color: white;
+    border: none; padding: 14px; border-radius: var(--radius-md);
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.booking-add-btn:hover:not(:disabled) { background: var(--orange-dark); transform: translateY(-1px); }
+.booking-add-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.booking-cancel-btn {
+    width: 100%; background: transparent; color: var(--brown-sub);
+    border: 1.5px solid var(--border); padding: 12px;
+    border-radius: var(--radius-md); font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; margin-top: 0.6rem;
+}
+.booking-cancel-btn:hover { background: var(--cream); border-color: var(--border-mid); }
+.dates-loading { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; }
+.date-skeleton {
+    width: 120px; height: 88px; border-radius: var(--radius-md);
+    background: linear-gradient(90deg, #f0e8df 25%, #fdf8f1 50%, #f0e8df 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 #shopAuthModal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(45, 36, 30, 0.6); display: flex; align-items: center; justify-content: center; z-index: var(--modal-z); visibility: visible; opacity: 1; }
 #shopAuthModal.modal-hidden { display: none !important; }
 #shopAuthModal .shop-auth-content { background: var(--white); padding: 32px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-width: 480px; width: 90%; position: relative; animation: shopModalSlide 0.3s ease; max-height: 90vh; overflow-y: auto; }
@@ -268,18 +561,25 @@ body { background: var(--cream); color: var(--brown); font-family: 'Segoe UI', s
 .payment-methods { grid-template-columns: 1fr 1fr; }
 .checkout-modal { padding: 0.75rem; }
 .checkout-box { padding: 1.5rem 1.25rem; border-radius: var(--radius-md); }
+.booking-dates-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+#serviceBookingModal { padding: 0.75rem; }
+.booking-modal-box { border-radius: var(--radius-lg); }
+#weightModal { padding: 0.75rem; }
+.weight-modal-box { border-radius: var(--radius-lg); }
+.weight-options-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
 }
 </style>
+
 <script>
-const CATALOG = @json($catalog);
+const CATALOG = {!! json_encode($catalog) !!};
 </script>
+
 <div id="shop-root">
 <nav class="shop-navbar">
 <div class="nav-inner">
 <a href="{{ route('home') }}" class="nav-brand">🐾 PawHaven</a>
 <div class="nav-links">
 @auth
-{{-- Links moved to user dropdown --}}
 @endauth
 </div>
 <div class="nav-actions">
@@ -351,6 +651,7 @@ const CATALOG = @json($catalog);
 </div>
 </div>
 </nav>
+
 <section class="shop-hero">
 <div class="hero-inner">
 <span class="hero-eyebrow">🐾 PawHaven Shop</span>
@@ -365,6 +666,7 @@ const CATALOG = @json($catalog);
 </div>
 </div>
 </section>
+
 <div class="shop-layout">
 <aside class="filter-panel">
 <div class="filter-panel-title">🔧 Filters</div>
@@ -394,6 +696,7 @@ const CATALOG = @json($catalog);
 <label class="toggle-label"><input type="checkbox" id="availOnly">Show available only</label>
 </div>
 </aside>
+
 <main class="product-grid-wrap">
 <div class="grid-toolbar">
 <div class="search-wrap">
@@ -418,6 +721,8 @@ const CATALOG = @json($catalog);
 </div>
 </main>
 </div>
+
+{{-- Cart Drawer --}}
 <div id="cartDrawer" class="cart-drawer">
 <div class="cart-header">
 <h3 class="cart-title">Your Cart 🛒</h3>
@@ -431,7 +736,7 @@ const CATALOG = @json($catalog);
 </div>
 <div id="cartOverlay" class="cart-overlay"></div>
 
-{{-- CUSTOMER MESSAGES DRAWER (auth users only) --}}
+{{-- Messages Drawer (auth only) --}}
 @auth
 <div id="msgDrawer" class="cart-drawer" style="width:440px; max-width:92vw;">
 <div class="cart-header">
@@ -466,6 +771,7 @@ Our team typically replies within a few hours 🐾
 <div id="msgOverlay" class="cart-overlay"></div>
 @endauth
 
+{{-- Checkout Modal --}}
 <div id="checkoutModal" class="checkout-modal hidden">
 <div class="checkout-box">
 <button class="checkout-close" id="checkoutClose">✕</button>
@@ -507,9 +813,105 @@ Our team typically replies within a few hours 🐾
 </form>
 </div>
 </div>
+
+{{-- ══════════════════════════════════════════
+     KG / WEIGHT SELECTOR MODAL
+     Shown when a customer clicks "Choose Size" on a Food product.
+══════════════════════════════════════════ --}}
+<div id="weightModal">
+<div class="weight-modal-box">
+
+    <div class="weight-modal-header">
+        <div class="weight-modal-header-left">
+            <div class="weight-modal-icon" id="wmIcon">🍖</div>
+            <div class="weight-modal-header-text">
+                <h3 id="wmName">Product Name</h3>
+                <p id="wmDesc">Choose a bag size below</p>
+            </div>
+        </div>
+        <button class="weight-modal-close" id="weightModalClose">✕</button>
+    </div>
+
+    <div class="weight-modal-body">
+
+        <div class="weight-step-label">⚖️ Choose a bag size</div>
+
+        {{-- Size option cards (populated by JS) --}}
+        <div class="weight-options-grid" id="wmOptionsGrid"></div>
+
+        {{-- Selected summary --}}
+        <div class="weight-selected-summary" id="wmSelectedSummary">
+            <span class="wss-icon">⚖️</span>
+            <div class="wss-text">
+                <div class="wss-label">Selected size</div>
+                <div class="wss-detail" id="wmSelectedDetail">—</div>
+            </div>
+        </div>
+
+        {{-- Quantity row --}}
+        <div class="weight-qty-row">
+            <span class="weight-qty-label">Quantity</span>
+            <div class="weight-qty-ctrl">
+                <button onclick="adjustWeightQty(-1)">−</button>
+                <span id="wmQtyDisplay">1</span>
+                <button onclick="adjustWeightQty(+1)">+</button>
+            </div>
+        </div>
+
+        {{-- CTA --}}
+        <button class="weight-add-btn" id="wmAddBtn" disabled>
+            🛒 Add to Cart
+        </button>
+        <button class="weight-cancel-btn" id="wmCancelBtn">Cancel</button>
+
+    </div>
+</div>
 </div>
 
-{{-- AUTH MODAL --}}
+{{-- SERVICE BOOKING MODAL --}}
+<div id="serviceBookingModal">
+<div class="booking-modal-box">
+    <div class="booking-modal-header">
+        <div class="booking-modal-header-text">
+            <h3>📅 Book a Service</h3>
+            <p>Pick an available date to add this service to your cart.</p>
+        </div>
+        <button class="booking-modal-close" id="bookingModalClose">✕</button>
+    </div>
+    <div class="booking-modal-body">
+        <div class="booking-service-banner">
+            <div class="booking-service-icon" id="bookingServiceIcon">🐾</div>
+            <div>
+                <div class="booking-service-name" id="bookingServiceName">Service Name</div>
+                <div class="booking-service-price" id="bookingServicePrice">₱0</div>
+            </div>
+        </div>
+        <div class="booking-step-label step-1">Choose your preferred date</div>
+        <div class="dates-loading" id="bookingDatesLoading">
+            <div class="date-skeleton"></div>
+            <div class="date-skeleton"></div>
+            <div class="date-skeleton"></div>
+            <div class="date-skeleton"></div>
+        </div>
+        <div class="booking-dates-grid" id="bookingDatesGrid" style="display:none;"></div>
+        <div class="booking-no-slots" id="bookingNoSlots" style="display:none;">
+            <div class="no-slots-icon">📭</div>
+            <p>No available dates right now</p>
+            <small>Check back soon — the admin opens new booking dates regularly.</small>
+        </div>
+        <div class="booking-step-label step-2" id="bookingStep2Label" style="display:none;">Your booking</div>
+        <div class="booking-selected-summary" id="bookingSelectedSummary">
+            <div class="booking-selected-summary-label">Selected date</div>
+            <div class="booking-selected-summary-date" id="bookingSelectedDate">—</div>
+            <div class="booking-selected-summary-slots" id="bookingSelectedSlots">— slots remaining</div>
+        </div>
+        <button class="booking-add-btn" id="bookingAddToCartBtn" disabled>🛒 Add to Cart</button>
+        <button class="booking-cancel-btn" id="bookingCancelBtn">Cancel</button>
+    </div>
+</div>
+</div>
+
+{{-- Auth Modal --}}
 <div id="shopAuthModal" class="modal-hidden">
 <div class="shop-auth-content">
 <button class="shop-modal-close-btn" id="shopCloseAuthModal">&times;</button>
@@ -590,7 +992,7 @@ Our team typically replies within a few hours 🐾
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content
@@ -726,7 +1128,6 @@ function getCsrfToken() {
         window.location.href = '{{ route('shop.3d') }}';
     });
 
-    // ── USER DROPDOWN (AUTHENTICATED) ──
     const userToggle = document.getElementById('userDropdownToggle');
     const userMenu   = document.getElementById('userDropdownMenu');
     if (userToggle && userMenu) {
@@ -735,8 +1136,7 @@ function getCsrfToken() {
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { userMenu.classList.remove('show'); userToggle.classList.remove('active'); } });
     }
     document.getElementById('userCartToggle')?.addEventListener('click', e => {
-        e.preventDefault();
-        openCart();
+        e.preventDefault(); openCart();
         if (userMenu) userMenu.classList.remove('show');
         if (userToggle) userToggle.classList.remove('active');
     });
@@ -744,7 +1144,9 @@ function getCsrfToken() {
     window.__shopOpenAuthModal = openAuthModal;
 })();
 
-// ══════════ SHOP LOGIC ══════════
+// ══════════════════════════════════════════════════════════════════════════════
+// SHOP LOGIC
+// ══════════════════════════════════════════════════════════════════════════════
 const allProducts = CATALOG;
 let cart = JSON.parse(sessionStorage.getItem('ph_cart') || '[]');
 let activeType = new URLSearchParams(location.search).get('type') || '';
@@ -767,6 +1169,24 @@ function renderCatPills() {
     document.querySelectorAll('#catPills .pill').forEach(btn => btn.addEventListener('click', () => { activeCat = btn.dataset.cat; renderCatPills(); renderGrid(); }));
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Returns true if a product is a Food item WITH weight options set by admin. */
+function hasFoodWeights(p) {
+    return p.category === 'Food'
+        && Array.isArray(p.weight_options)
+        && p.weight_options.length > 0;
+}
+
+/**
+ * Builds a unique cart key for a food item + weight combo.
+ * Normal products use just the id; food with weights uses "id_1.5kg" etc.
+ */
+function cartKey(item, weightOpt) {
+    if (weightOpt) return `${item.id}_${weightOpt.kg}kg`;
+    return String(item.id);
+}
+
 function renderGrid() {
     let items = allProducts.filter(p => {
         if (activeType && p.type !== activeType) return false;
@@ -779,15 +1199,54 @@ function renderGrid() {
     if (sortMode === 'price-asc')  items.sort((a, b) => a.price - b.price);
     if (sortMode === 'price-desc') items.sort((a, b) => b.price - a.price);
     if (sortMode === 'name-asc')   items.sort((a, b) => a.name.localeCompare(b.name));
+
     document.getElementById('resultsBar').textContent = `${items.length} result${items.length !== 1 ? 's' : ''} found`;
     document.getElementById('emptyState').classList.toggle('hidden', items.length > 0);
+
     document.getElementById('productGrid').innerHTML = items.map(p => {
         const badgeHtml  = p.badge ? `<span class="badge badge-${p.badge}">${p.badgeLabel}</span>` : '';
-        const inCart     = cart.some(c => String(c.id) === String(p.id));
         const availCls   = p.available ? '' : 'unavailable';
         const imgContent = p.image
             ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
             : `<span class="card-emoji">${p.emoji}</span>`;
+
+        // ── Price display ──
+        // For food items with weight options, show the starting-from price
+        let priceDisplay = `₱${p.price.toLocaleString()}`;
+        if (hasFoodWeights(p)) {
+            const lowestPrice = Math.min(...p.weight_options.map(o => o.price));
+            priceDisplay = `from ₱${lowestPrice.toLocaleString()}`;
+        }
+
+        // ── Available sizes pills on card ──
+        let sizesPills = '';
+        if (hasFoodWeights(p)) {
+            const pills = p.weight_options.map(o => `<span class="food-size-pill">${o.kg}kg</span>`).join('');
+            sizesPills = `<div class="food-sizes-row">${pills}</div>`;
+        }
+
+        // ── Action button logic ──
+        let actionBtn = '';
+        if (!p.available) {
+            actionBtn = `<span class="unavail-tag">Unavailable</span>`;
+        } else if (p.type === 'service') {
+            const inCart = cart.some(c => String(c.id) === String(p.id));
+            if (inCart) {
+                actionBtn = `<button class="add-to-cart in-cart" onclick="openServiceBookingModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">✓ Booked</button>`;
+            } else {
+                actionBtn = `<button class="add-to-cart" onclick="openServiceBookingModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">📅 Book</button>`;
+            }
+        } else if (hasFoodWeights(p)) {
+            // Food with weight options — always show "Choose Size" to open the weight modal
+            const anyInCart = cart.some(c => String(c.id).startsWith(String(p.id) + '_') || String(c.id) === String(p.id));
+            actionBtn = `<button class="add-to-cart ${anyInCart ? 'in-cart' : ''}" onclick="openWeightModal(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                ${anyInCart ? '⚖️ Change Size' : '⚖️ Choose Size'}
+            </button>`;
+        } else {
+            const inCart = cart.some(c => String(c.id) === String(p.id));
+            actionBtn = `<button class="add-to-cart ${inCart ? 'in-cart' : ''}" onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">${inCart ? '✓ Added' : '+ Add'}</button>`;
+        }
+
         return `<div class="product-card ${availCls}">
 <div class="card-img">
 ${imgContent}
@@ -798,28 +1257,300 @@ ${!p.available ? '<div class="unavail-overlay">Out of Stock</div>' : ''}
 <div class="card-category">${p.category}</div>
 <h3 class="card-name">${p.name}</h3>
 <p class="card-desc">${p.desc}</p>
+${sizesPills}
 <div class="card-footer">
-<span class="card-price">₱${p.price.toLocaleString()}</span>
-${p.available
-    ? `<button class="add-to-cart ${inCart ? 'in-cart' : ''}" onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">${inCart ? '✓ Added' : '+ Add'}</button>`
-    : `<span class="unavail-tag">Unavailable</span>`}
+<span class="card-price">${priceDisplay}</span>
+${actionBtn}
 </div>
 </div>
 </div>`;
     }).join('');
 }
 
-// ── UPDATED: carries item_type and source_id so the backend can deduct stock ──
+// ══════════════════════════════════════════════════════════════════════════════
+// WEIGHT / KG SELECTOR MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+let _weightItem    = null;   // catalog item being sized
+let _weightOpt     = null;   // selected { kg, price } object
+let _weightQty     = 1;      // quantity
+
+/**
+ * Opens the weight/kg selector modal for a food item.
+ * @param {object} item – the full catalog item (must have weight_options array)
+ */
+function openWeightModal(item) {
+    _weightItem = item;
+    _weightOpt  = null;
+    _weightQty  = 1;
+
+    // Populate header
+    const iconEl = document.getElementById('wmIcon');
+    if (item.image) {
+        iconEl.innerHTML = `<img src="${item.image}" alt="${item.name}">`;
+    } else {
+        iconEl.textContent = item.emoji || '🍖';
+    }
+    document.getElementById('wmName').textContent = item.name;
+    document.getElementById('wmDesc').textContent = item.desc
+        ? item.desc.substring(0, 60) + (item.desc.length > 60 ? '…' : '')
+        : 'Choose a bag size below';
+
+    // Reset state
+    document.getElementById('wmSelectedSummary').classList.remove('show');
+    document.getElementById('wmQtyDisplay').textContent = '1';
+    document.getElementById('wmAddBtn').disabled = true;
+    document.getElementById('wmAddBtn').textContent = '🛒 Add to Cart';
+
+    // Render size cards
+    const grid = document.getElementById('wmOptionsGrid');
+    grid.innerHTML = (item.weight_options || []).map(opt => `
+        <div class="weight-option-card" data-kg="${opt.kg}" data-price="${opt.price}"
+             onclick="selectWeightOption(${opt.kg}, ${opt.price})">
+            <div class="woc-kg">${opt.kg}</div>
+            <div class="woc-unit">kg</div>
+            <div class="woc-price">₱${parseFloat(opt.price).toLocaleString('en-PH', { minimumFractionDigits: 0 })}</div>
+        </div>`).join('');
+
+    // Pre-select if there's already a matching item in the cart
+    const existing = cart.find(c => String(c.id).startsWith(String(item.id) + '_'));
+    if (existing && existing.selected_kg) {
+        selectWeightOption(existing.selected_kg, existing.price);
+        _weightQty = existing.qty;
+        document.getElementById('wmQtyDisplay').textContent = _weightQty;
+    }
+
+    // Open
+    document.getElementById('weightModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+/** Called when a size card is clicked. */
+function selectWeightOption(kg, price) {
+    _weightOpt = { kg: parseFloat(kg), price: parseFloat(price) };
+
+    // Highlight card
+    document.querySelectorAll('.weight-option-card').forEach(el => {
+        el.classList.toggle('selected', parseFloat(el.dataset.kg) === _weightOpt.kg);
+    });
+
+    // Show summary
+    document.getElementById('wmSelectedDetail').textContent =
+        `${_weightOpt.kg} kg bag — ₱${_weightOpt.price.toLocaleString('en-PH', { minimumFractionDigits: 0 })} each`;
+    document.getElementById('wmSelectedSummary').classList.add('show');
+
+    // Enable add button
+    const addBtn = document.getElementById('wmAddBtn');
+    addBtn.disabled = false;
+    updateWmAddBtnLabel();
+}
+
+function adjustWeightQty(delta) {
+    _weightQty = Math.max(1, _weightQty + delta);
+    document.getElementById('wmQtyDisplay').textContent = _weightQty;
+    updateWmAddBtnLabel();
+}
+
+function updateWmAddBtnLabel() {
+    if (!_weightOpt) return;
+    const total = (_weightOpt.price * _weightQty).toLocaleString('en-PH', { minimumFractionDigits: 0 });
+    document.getElementById('wmAddBtn').textContent =
+        `🛒 Add ${_weightQty}× ${_weightOpt.kg}kg to Cart — ₱${total}`;
+}
+
+/** Adds the food item + chosen weight/qty to the cart. */
+function confirmWeightAdd() {
+    if (!_weightItem || !_weightOpt) return;
+
+    const key      = cartKey(_weightItem, _weightOpt);
+    const sourceId = parseInt(String(_weightItem.id).replace(/^[a-z]+-/i, '')) || null;
+
+    const cartItem = {
+        ..._weightItem,
+        id:           key,            // unique key includes the weight variant
+        source_id:    sourceId,
+        price:        _weightOpt.price,
+        selected_kg:  _weightOpt.kg,
+        qty:          _weightQty,
+        item_type:    'supply',
+        scheduled_at: null,
+        // human-readable variant label used in cart/checkout display
+        variant_label: `${_weightOpt.kg}kg`,
+    };
+
+    // Remove any previous variant of this product from cart
+    cart = cart.filter(c => !String(c.id).startsWith(String(_weightItem.id) + '_')
+                          && String(c.id) !== String(_weightItem.id));
+    cart.push(cartItem);
+
+    saveCart();
+    renderCart();
+    renderGrid();
+    closeWeightModal();
+    openCart();
+}
+
+function closeWeightModal() {
+    document.getElementById('weightModal').classList.remove('open');
+    document.body.style.overflow = '';
+    _weightItem = null; _weightOpt = null; _weightQty = 1;
+}
+
+// Wire up weight modal buttons
+document.getElementById('weightModalClose').addEventListener('click', closeWeightModal);
+document.getElementById('wmCancelBtn').addEventListener('click', closeWeightModal);
+document.getElementById('wmAddBtn').addEventListener('click', confirmWeightAdd);
+document.getElementById('weightModal').addEventListener('click', function (e) {
+    if (e.target === this) closeWeightModal();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('weightModal').classList.contains('open')) {
+        closeWeightModal();
+    }
+});
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SERVICE BOOKING MODAL (unchanged)
+// ══════════════════════════════════════════════════════════════════════════════
+let _bookingItem        = null;
+let _bookingSchedules   = [];
+let _selectedSchedule   = null;
+
+async function openServiceBookingModal(item) {
+    _bookingItem      = item;
+    _selectedSchedule = null;
+
+    const iconEl = document.getElementById('bookingServiceIcon');
+    if (item.image) {
+        iconEl.innerHTML = `<img src="${item.image}" alt="${item.name}">`;
+    } else {
+        iconEl.innerHTML = item.emoji || '🐾';
+    }
+    document.getElementById('bookingServiceName').textContent  = item.name;
+    document.getElementById('bookingServicePrice').textContent = '₱' + item.price.toLocaleString();
+
+    document.getElementById('bookingDatesLoading').style.display = 'flex';
+    document.getElementById('bookingDatesGrid').style.display    = 'none';
+    document.getElementById('bookingNoSlots').style.display      = 'none';
+    document.getElementById('bookingSelectedSummary').classList.remove('show');
+    document.getElementById('bookingStep2Label').style.display   = 'none';
+    document.getElementById('bookingAddToCartBtn').disabled      = true;
+    document.getElementById('bookingAddToCartBtn').textContent   = '🛒 Add to Cart';
+
+    document.getElementById('serviceBookingModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const rawId    = String(item.id);
+    const sourceId = parseInt(rawId.replace(/^[a-z]+-/i, '')) || null;
+
+    try {
+        const res  = await fetch(`/api/v1/service-schedules?service_id=${sourceId}`);
+        const data = await res.json();
+        _bookingSchedules = Array.isArray(data) ? data : (data.data ?? []);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        _bookingSchedules = _bookingSchedules.filter(s => {
+            const d = new Date(s.date + 'T00:00:00');
+            const booked = s.booked_count ?? 0;
+            return s.status === 'open' && d >= today && booked < s.slot_limit;
+        });
+        _bookingSchedules.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        renderBookingDates();
+    } catch (err) {
+        document.getElementById('bookingDatesLoading').style.display = 'none';
+        document.getElementById('bookingNoSlots').style.display      = 'block';
+        document.getElementById('bookingNoSlots').querySelector('small').textContent =
+            'Could not load available dates. Please try again.';
+    }
+}
+
+function renderBookingDates() {
+    document.getElementById('bookingDatesLoading').style.display = 'none';
+    if (!_bookingSchedules.length) { document.getElementById('bookingNoSlots').style.display = 'block'; return; }
+
+    const grid = document.getElementById('bookingDatesGrid');
+    grid.style.display = 'grid';
+    grid.innerHTML = _bookingSchedules.map(s => {
+        const d         = new Date(s.date + 'T00:00:00');
+        const dayName   = d.toLocaleDateString('en-PH', { weekday: 'short' });
+        const dayNum    = d.getDate();
+        const month     = d.toLocaleDateString('en-PH', { month: 'short' });
+        const booked    = s.booked_count ?? 0;
+        const remaining = s.slot_limit - booked;
+        const isFull    = remaining <= 0;
+        let slotClass = 'available', slotLabel = `${remaining} slot${remaining !== 1 ? 's' : ''} left`;
+        if (isFull) { slotClass = 'full-tag'; slotLabel = 'Full'; }
+        else if (remaining <= 3) { slotClass = 'scarce'; }
+        return `<div class="${isFull ? 'booking-date-card full' : 'booking-date-card'}" data-sched-id="${s.id}" onclick="selectBookingDate(${s.id})">
+    <div class="date-card-day">${dayName}</div>
+    <div class="date-card-num">${dayNum}</div>
+    <div class="date-card-month">${month}</div>
+    <span class="date-card-slots ${slotClass}">${slotLabel}</span>
+</div>`;
+    }).join('');
+}
+
+function selectBookingDate(schedId) {
+    _selectedSchedule = _bookingSchedules.find(s => s.id === schedId) ?? null;
+    if (!_selectedSchedule) return;
+    document.querySelectorAll('.booking-date-card').forEach(el => {
+        el.classList.toggle('selected', parseInt(el.dataset.schedId) === schedId);
+    });
+    const d         = new Date(_selectedSchedule.date + 'T00:00:00');
+    const fullDate  = d.toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const booked    = _selectedSchedule.booked_count ?? 0;
+    const remaining = _selectedSchedule.slot_limit - booked;
+    document.getElementById('bookingSelectedDate').textContent  = fullDate;
+    document.getElementById('bookingSelectedSlots').textContent = `${remaining} of ${_selectedSchedule.slot_limit} slots remaining`;
+    document.getElementById('bookingSelectedSummary').classList.add('show');
+    document.getElementById('bookingStep2Label').style.display  = 'flex';
+    const addBtn = document.getElementById('bookingAddToCartBtn');
+    addBtn.disabled    = false;
+    addBtn.textContent = `🛒 Add to Cart — ${fullDate}`;
+}
+
+function confirmServiceBooking() {
+    if (!_bookingItem || !_selectedSchedule) return;
+    const sourceId = parseInt(String(_bookingItem.id).replace(/^[a-z]+-/i, '')) || null;
+    const cartItem = {
+        ..._bookingItem, qty: 1, item_type: 'service',
+        source_id: sourceId, schedule_id: _selectedSchedule.id,
+        scheduled_at: _selectedSchedule.date,
+    };
+    const existingIdx = cart.findIndex(c => String(c.id) === String(_bookingItem.id));
+    if (existingIdx > -1) { cart[existingIdx] = cartItem; } else { cart.push(cartItem); }
+    saveCart(); renderCart(); renderGrid(); closeServiceBookingModal(); openCart();
+}
+
+function closeServiceBookingModal() {
+    document.getElementById('serviceBookingModal').classList.remove('open');
+    document.body.style.overflow = '';
+    _bookingItem = null; _selectedSchedule = null; _bookingSchedules = [];
+}
+
+document.getElementById('bookingModalClose').addEventListener('click', closeServiceBookingModal);
+document.getElementById('bookingCancelBtn').addEventListener('click', closeServiceBookingModal);
+document.getElementById('bookingAddToCartBtn').addEventListener('click', confirmServiceBooking);
+document.getElementById('serviceBookingModal').addEventListener('click', function (e) { if (e.target === this) closeServiceBookingModal(); });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('serviceBookingModal').classList.contains('open')) {
+        closeServiceBookingModal();
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CART
+// ══════════════════════════════════════════════════════════════════════════════
 function addToCart(item) {
     const existing = cart.find(c => String(c.id) === String(item.id));
     if (existing) {
         existing.qty++;
     } else {
-        // Derive item_type from the catalog 'type' field
         const itemType = item.type === 'pet'     ? 'pet'
                        : item.type === 'service' ? 'service'
                        :                           'supply';
-        // source_id: strip the text prefix from the compound id (e.g. "pet-12" → 12)
         const sourceId = parseInt(String(item.id).replace(/^[a-z]+-/i, '')) || null;
         cart.push({ ...item, qty: 1, item_type: itemType, source_id: sourceId, scheduled_at: null });
     }
@@ -834,6 +1565,7 @@ function removeFromCart(id) {
 function updateQty(id, delta) {
     const item = cart.find(c => String(c.id) === String(id));
     if (!item) return;
+    if (item.item_type === 'service') return;
     item.qty = Math.max(1, item.qty + delta);
     saveCart(); renderCart();
 }
@@ -848,11 +1580,47 @@ function saveCart() {
 function renderCart() {
     const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
     document.getElementById('cartTotal').textContent = '₱' + total.toLocaleString();
-    document.getElementById('cartItems').innerHTML = cart.length
-        ? cart.map(c => `<div class="cart-item"><span class="cart-item-emoji">${c.emoji}</span><div class="cart-item-info"><div class="cart-item-name">${c.name}</div><div class="cart-item-price">₱${(c.price * c.qty).toLocaleString()}</div></div><div class="cart-qty-wrap"><button onclick="window.__cart.updateQty('${c.id}', -1)">−</button><span>${c.qty}</span><button onclick="window.__cart.updateQty('${c.id}', +1)">+</button></div><button class="cart-remove" onclick="window.__cart.removeFromCart('${c.id}')">✕</button></div>`).join('')
-        : `<div class="cart-empty"><span class="cart-empty-icon">🛒</span>Your cart is empty</div>`;
+
+    if (!cart.length) {
+        document.getElementById('cartItems').innerHTML =
+            `<div class="cart-empty"><span class="cart-empty-icon">🛒</span>Your cart is empty</div>`;
+        return;
+    }
+
+    document.getElementById('cartItems').innerHTML = cart.map(c => {
+        const isService = c.item_type === 'service';
+        const dateLabel = c.scheduled_at
+            ? new Date(c.scheduled_at + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' })
+            : '';
+
+        // Weight/kg variant label for food items
+        const variantLabel = c.variant_label
+            ? `<div class="cart-item-date" style="color:var(--orange);">⚖️ ${c.variant_label}</div>`
+            : '';
+
+        const qtyHtml = isService
+            ? `<span style="font-size:0.75rem; color:var(--green); font-weight:700; background:#DCFCE7; padding:3px 9px; border-radius:99px;">📅 Booked</span>`
+            : `<div class="cart-qty-wrap">
+                <button onclick="window.__cart.updateQty('${c.id}', -1)">−</button>
+                <span>${c.qty}</span>
+                <button onclick="window.__cart.updateQty('${c.id}', +1)">+</button>
+               </div>`;
+
+        return `<div class="cart-item">
+<span class="cart-item-emoji">${c.emoji ?? '🐾'}</span>
+<div class="cart-item-info">
+    <div class="cart-item-name">${c.name}</div>
+    <div class="cart-item-price">₱${(c.price * c.qty).toLocaleString()}</div>
+    ${variantLabel}
+    ${isService && dateLabel ? `<div class="cart-item-date">📅 ${dateLabel}</div>` : ''}
+</div>
+${qtyHtml}
+<button class="cart-remove" onclick="window.__cart.removeFromCart('${c.id}')">✕</button>
+</div>`;
+    }).join('');
 }
 
+// Payment helpers
 function selectPayment(method) {
     if (method === 'cash' && document.getElementById('optCash').classList.contains('locked')) return;
     selectedPayment = method;
@@ -873,14 +1641,6 @@ function applyPaymentRules(total) {
     else { cashOption.classList.remove('locked'); lockNotice.classList.remove('show'); selectPayment('cash'); }
 }
 
-// ── Sync service date picker value into hidden input ──────────────────────────
-function updateScheduledAt(index, value) {
-    const hiddenInput = document.getElementById(`hidden_sched_${index}`);
-    if (hiddenInput) hiddenInput.value = value;
-}
-window.updateScheduledAt = updateScheduledAt;
-
-// ── UPDATED: guard ensures every service item has a booking date ──────────────
 function proceedToOTP() {
     const name  = document.getElementById('chkName').value.trim();
     const email = document.getElementById('chkEmail').value.trim();
@@ -889,18 +1649,8 @@ function proceedToOTP() {
         const ref = document.getElementById('gcashRef').value.trim();
         if (ref.length < 13) { alert('Enter complete 13-digit reference.'); return; }
     }
-    // Require a booking date for every service in the cart
-    const missingDate = cart.some((item, i) => {
-        if (item.item_type !== 'service') return false;
-        const hiddenInput = document.getElementById(`hidden_sched_${i}`);
-        return !hiddenInput || !hiddenInput.value;
-    });
-    if (missingDate) {
-        alert('Please select a preferred booking date for each service.');
-        return;
-    }
-    document.getElementById('otpEmailDisplay').textContent  = email;
-    document.getElementById('otpSection').style.display    = 'block';
+    document.getElementById('otpEmailDisplay').textContent    = email;
+    document.getElementById('otpSection').style.display      = 'block';
     document.getElementById('proceedToOtpBtn').style.display = 'none';
 }
 
@@ -932,64 +1682,87 @@ async function verifyAndSubmit() {
     const btn    = document.getElementById('placeOrderBtn');
     btn.disabled = true; btn.textContent = 'Verifying…';
     try {
-        const res  = await fetch('{{ route("shop.otp.verify") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }, body: JSON.stringify({ email, otp }) });
+        const res  = await fetch('{{ route("shop.otp.verify") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            body: JSON.stringify({ email, otp })
+        });
         const data = await res.json();
-        if (res.ok && data.success) { status.textContent = '✅ Verified!'; status.style.color = '#34A853'; btn.textContent = 'Placing Order…'; setTimeout(() => document.getElementById('checkoutForm').submit(), 600); }
-        else { status.textContent = data.message || 'Incorrect OTP'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
-    } catch { status.textContent = 'Network error'; status.style.color = '#EF4444'; btn.disabled = false; btn.textContent = 'Place Order →'; }
+        if (res.ok && data.success) {
+            status.textContent = '✅ Verified!'; status.style.color = '#34A853';
+            btn.textContent = 'Placing Order…';
+            sessionStorage.removeItem('ph_cart');
+            cart = []; saveCart(); renderCart();
+            setTimeout(() => document.getElementById('checkoutForm').submit(), 600);
+        } else {
+            status.textContent = data.message || 'Incorrect OTP'; status.style.color = '#EF4444';
+            btn.disabled = false; btn.textContent = 'Place Order →';
+        }
+    } catch {
+        status.textContent = 'Network error'; status.style.color = '#EF4444';
+        btn.disabled = false; btn.textContent = 'Place Order →';
+    }
 }
 
 function openCart()  { document.getElementById('cartDrawer').classList.add('open');    document.getElementById('cartOverlay').classList.add('show'); }
 function closeCart() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('show'); }
 
-// Expose to global scope for inline onclick handlers
-window.__cart         = { removeFromCart, updateQty };
-window.addToCart      = addToCart;
-window.selectPayment  = selectPayment;
-window.proceedToOTP   = proceedToOTP;
-window.sendOTP        = sendOTP;
-window.verifyAndSubmit = verifyAndSubmit;
 
-// ── UPDATED: checkout button — builds hidden inputs with new fields + service date pickers ──
+// 👇 ============================================================== 👇
+// FIX: MAP ALL INLINE "onclick" FUNCTIONS TO THE GLOBAL WINDOW SCOPE
+// 👆 ============================================================== 👆
+window.__cart                  = { removeFromCart, updateQty };
+window.addToCart               = addToCart;
+window.openServiceBookingModal = openServiceBookingModal;
+window.selectBookingDate       = selectBookingDate;         // <--- This was missing!
+window.openWeightModal         = openWeightModal;
+window.selectWeightOption      = selectWeightOption;
+window.adjustWeightQty         = adjustWeightQty;
+window.selectPayment           = selectPayment;
+window.proceedToOTP            = proceedToOTP;
+window.sendOTP                 = sendOTP;
+window.verifyAndSubmit         = verifyAndSubmit;
+
+// Checkout button
 document.getElementById('checkoutBtn').addEventListener('click', () => {
     if (!cart.length) return;
 
-    // Calculate tomorrow as the minimum bookable date
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = tomorrow.toISOString().split('T')[0];
-
-    // Build all hidden inputs including item_type, source_id, and scheduled_at placeholder
     const hidden = document.getElementById('checkoutHiddenItems');
     hidden.innerHTML = '';
     cart.forEach((item, i) => {
         hidden.innerHTML += `
-            <input type="hidden" name="items[${i}][name]"          value="${item.name}">
-            <input type="hidden" name="items[${i}][emoji]"         value="${item.emoji ?? ''}">
-            <input type="hidden" name="items[${i}][qty]"           value="${item.qty}">
-            <input type="hidden" name="items[${i}][price]"         value="${item.price}">
-            <input type="hidden" name="items[${i}][item_type]"     value="${item.item_type ?? 'supply'}">
-            <input type="hidden" name="items[${i}][source_id]"     value="${item.source_id ?? ''}">
-            <input type="hidden" name="items[${i}][scheduled_at]"  id="hidden_sched_${i}" value="">
+            <input type="hidden" name="items[${i}][name]"           value="${item.name}">
+            <input type="hidden" name="items[${i}][emoji]"          value="${item.emoji ?? ''}">
+            <input type="hidden" name="items[${i}][qty]"            value="${item.qty}">
+            <input type="hidden" name="items[${i}][price]"          value="${item.price}">
+            <input type="hidden" name="items[${i}][item_type]"      value="${item.item_type ?? 'supply'}">
+            <input type="hidden" name="items[${i}][source_id]"      value="${item.source_id ?? ''}">
+            <input type="hidden" name="items[${i}][schedule_id]"    value="${item.schedule_id ?? ''}">
+            <input type="hidden" name="items[${i}][scheduled_at]"   id="hidden_sched_${i}" value="${item.scheduled_at ?? ''}">
+            <input type="hidden" name="items[${i}][selected_kg]"    value="${item.selected_kg ?? ''}">
+            <input type="hidden" name="items[${i}][variant_label]"  value="${item.variant_label ?? ''}">
         `;
     });
 
-    // Build the order summary — services get a date picker inline
+    // Build checkout summary
     document.getElementById('checkoutSummary').innerHTML = cart.map((item, i) => {
         const subtotal  = (item.price * item.qty).toLocaleString();
         const isService = item.item_type === 'service';
-        const datePicker = isService ? `
-            <div style="margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <label style="font-size:0.78rem; font-weight:700; color:#A68B6D; white-space:nowrap;">
-                    📅 Preferred Date:
-                </label>
-                <input type="date"
-                       min="${minDate}"
-                       onchange="updateScheduledAt(${i}, this.value)"
-                       style="padding:4px 8px; border:1.5px solid #F3E9DC; border-radius:8px;
-                              font-size:0.82rem; background:#FDF8F1; color:#2D241E;
-                              cursor:pointer; outline:none; flex:1; min-width:140px;">
-            </div>` : '';
+        const dateLabel = item.scheduled_at
+            ? new Date(item.scheduled_at + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+            : null;
+
+        // Weight/kg variant row
+        const weightRow = item.variant_label
+            ? `<div style="margin-top:4px; font-size:0.78rem; color:#E68A39; font-weight:700;">⚖️ ${item.variant_label}</div>`
+            : '';
+
+        const dateRow = isService && dateLabel
+            ? `<div style="margin-top:5px; display:flex; align-items:center; gap:6px; font-size:0.8rem; color:#A68B6D; font-weight:600;">
+                   <span>📅</span><span>${dateLabel}</span>
+               </div>`
+            : '';
+
         return `
             <div style="padding:8px 0; border-bottom:1px dashed #F3E9DC; font-size:0.9rem;">
                 <div style="display:flex; justify-content:space-between; gap:1rem;">
@@ -998,25 +1771,22 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
                     </span>
                     <span style="font-weight:700; color:#2D241E; white-space:nowrap;">₱${subtotal}</span>
                 </div>
-                ${datePicker}
+                ${weightRow}
+                ${dateRow}
             </div>`;
     }).join('');
 
     const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
     document.getElementById('checkoutGrandTotal').textContent = '₱' + total.toLocaleString();
-
-    // Reset OTP section state
-    document.getElementById('otpSection').style.display      = 'none';
-    document.getElementById('proceedToOtpBtn').style.display = 'block';
-    document.getElementById('placeOrderBtn').style.display   = 'none';
-
+    document.getElementById('otpSection').style.display       = 'none';
+    document.getElementById('proceedToOtpBtn').style.display  = 'block';
+    document.getElementById('placeOrderBtn').style.display    = 'none';
     applyPaymentRules(total);
     document.getElementById('checkoutModal').classList.remove('hidden');
     closeCart();
 });
 
 document.getElementById('checkoutClose').addEventListener('click', () => { document.getElementById('checkoutModal').classList.add('hidden'); });
-document.getElementById('cartToggle')?.addEventListener('click', openCart);
 document.getElementById('cartClose').addEventListener('click', closeCart);
 document.getElementById('cartOverlay').addEventListener('click', closeCart);
 
@@ -1046,7 +1816,7 @@ if (activeType) { document.querySelectorAll('#typePills .pill').forEach(b => b.c
     const overlay = document.getElementById('msgOverlay');
     const window_ = document.getElementById('msgWindow');
     const input   = document.getElementById('msgInput');
-    if (!drawer) return; // guest — skip
+    if (!drawer) return;
 
     function openMsg()  { drawer.classList.add('open');    overlay.classList.add('show');    loadMyMessages(); }
     function closeMsg() { drawer.classList.remove('open'); overlay.classList.remove('show'); }
@@ -1056,23 +1826,15 @@ if (activeType) { document.querySelectorAll('#typePills .pill').forEach(b => b.c
     overlay?.addEventListener('click', closeMsg);
 
     function renderBubbles(messages) {
-        if (!messages.length) {
-            window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;"><div style="font-size:2rem; margin-bottom:8px;">💬</div>No messages yet. Say hello! 👋</div>`;
-            return;
-        }
+        if (!messages.length) { window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;"><div style="font-size:2rem; margin-bottom:8px;">💬</div>No messages yet. Say hello! 👋</div>`; return; }
         window_.innerHTML = messages.map(m => {
             const isOut = m.type === 'received';
-            return `<div class="msg-row ${isOut ? 'out' : 'in'}">
-<div class="${isOut ? 'msg-bubble-out' : 'msg-bubble-in'}">${escapeHtml(m.text)}</div>
-<span class="msg-time">${m.time}</span>
-</div>`;
+            return `<div class="msg-row ${isOut ? 'out' : 'in'}"><div class="${isOut ? 'msg-bubble-out' : 'msg-bubble-in'}">${escapeHtml(m.text)}</div><span class="msg-time">${m.time}</span></div>`;
         }).join('');
         window_.scrollTop = window_.scrollHeight;
     }
 
-    function escapeHtml(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+    function escapeHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     async function loadMyMessages() {
         window_.innerHTML = `<div style="text-align:center; color:var(--brown-muted); padding:2rem 0;">Loading…</div>`;
@@ -1080,9 +1842,7 @@ if (activeType) { document.querySelectorAll('#typePills .pill').forEach(b => b.c
             const res  = await fetch('/api/my-messages', { headers: { 'Accept': 'application/json' } });
             const data = await res.json();
             renderBubbles(data.messages || []);
-        } catch {
-            window_.innerHTML = `<div style="text-align:center; color:#ef4444; padding:2rem 0;">Failed to load. Try again.</div>`;
-        }
+        } catch { window_.innerHTML = `<div style="text-align:center; color:#ef4444; padding:2rem 0;">Failed to load. Try again.</div>`; }
     }
 
     window.sendMyMessage = async function () {
@@ -1095,14 +1855,8 @@ if (activeType) { document.querySelectorAll('#typePills .pill').forEach(b => b.c
         window_.appendChild(row);
         window_.scrollTop = window_.scrollHeight;
         try {
-            await fetch('/api/my-messages/send', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' },
-                body:    JSON.stringify({ text }),
-            });
-        } catch {
-            row.querySelector('.msg-bubble-out').style.opacity = '0.5';
-        }
+            await fetch('/api/my-messages/send', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken(), 'Accept': 'application/json' }, body: JSON.stringify({ text }) });
+        } catch { row.querySelector('.msg-bubble-out').style.opacity = '0.5'; }
     };
 })();
 

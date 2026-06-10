@@ -15,7 +15,7 @@ return new class extends Migration
             $table->enum('status', ['Active', 'Draft'])->default('Active');
             $table->decimal('price', 10, 2)->default(0.00);
             $table->text('description')->nullable();
-            // Shop-facing fields
+            $table->string('image_path')->nullable();
             $table->string('emoji')->nullable();          // same as icon for shop display
             $table->string('category')->nullable();       // Salon, Clinic, Boarding, Training
             $table->string('badge')->nullable();

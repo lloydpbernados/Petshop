@@ -756,13 +756,36 @@ HERO
 <span class="product-badge-lnd badge-{{ $product->badge ?? 'popular' }}-lnd">{{ $product->badge_label ?? 'Popular' }}</span>
 </div>
 <div class="product-card-body-lnd">
-<div class="product-category-lnd">{{ $product->category }}</div>
-<h3 class="product-name-lnd">{{ $product->name }}</h3>
-<p class="product-desc-lnd">{{ $product->description }}</p>
-<div class="product-footer-lnd">
-<span class="product-price-lnd">₱{{ number_format($product->price) }}</span>
-<a href="{{ route('shop', ['addToCart' => 'supply-'.$product->id]) }}" class="btn-shop-lnd">Add to Cart </a>
-</div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="product-category-lnd">{{ $product->category }}</div>
+        
+        {{-- Show available weight sizes if it's a Food item --}}
+        @if($product->category === 'Food' && is_array($product->weight_options) && count($product->weight_options) > 0)
+            <div style="font-size:9px; color:#92400E; background:#FEF9C3; border:1px solid #FDE68A; border-radius:6px; padding:2px 6px; font-weight:bold;">
+                ⚖️ {{ collect($product->weight_options)->pluck('kg')->join(', ') }}kg
+            </div>
+        @endif
+    </div>
+    
+    <h3 class="product-name-lnd">{{ $product->name }}</h3>
+    <p class="product-desc-lnd">{{ $product->description }}</p>
+    
+    <div class="product-footer-lnd">
+        @php
+            $displayPrice = $product->price;
+            $prefix = '';
+            
+            // If it has weight options, grab the lowest price and add "From"
+            if ($product->category === 'Food' && is_array($product->weight_options) && count($product->weight_options) > 0) {
+                $minPrice = collect($product->weight_options)->min('price');
+                $displayPrice = $minPrice;
+                $prefix = '<span style="font-size:0.75rem; color:var(--brown-mid); font-weight:normal;">From</span> ';
+            }
+        @endphp
+        
+        <span class="product-price-lnd">{!! $prefix !!}₱{{ number_format($displayPrice, 2) }}</span>
+        <a href="{{ route('shop', ['addToCart' => 'supply-'.$product->id]) }}" class="btn-shop-lnd">Add to Cart</a>
+    </div>
 </div>
 </div>
 @empty
@@ -785,7 +808,15 @@ HERO
 <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem;">
 @forelse($services as $service)
 <div style="background:#FDF8F1; border-radius:1.5rem; padding:2rem; border:1px solid #F3E9DC;">
-<div style="font-size:2.5rem; margin-bottom:1rem;">{{ $service->icon }}</div>
+@if($service->image_path)
+    <div style="width:100%; height:160px; border-radius:1rem; overflow:hidden; margin-bottom:1rem;">
+        <img src="{{ Storage::url($service->image_path) }}"
+             alt="{{ $service->name }}"
+             style="width:100%; height:100%; object-fit:cover;">
+    </div>
+@else
+    <div style="font-size:2.5rem; margin-bottom:1rem;">{{ $service->icon }}</div>
+@endif
 <h3 style="font-size:1.1rem; font-weight:700; color:#2D241E; margin-bottom:.5rem;">{{ $service->name }}</h3>
 <p style="font-size:.85rem; color:#8c7e74; line-height:1.6; margin-bottom:1.5rem;">{{ $service->description }}</p>
 <div style="display:flex; align-items:center; justify-content:space-between;">

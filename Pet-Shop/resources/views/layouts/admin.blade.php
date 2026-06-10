@@ -48,34 +48,26 @@
         <nav class="flex-1 px-4 xl:px-6 space-y-1 overflow-y-auto custom-scrollbar">
             @php
                 $navItems = [
-                    ['url' => '/admin/dashboard',     'label' => 'Dashboard',     'icon' => '📊'],
-                    ['url' => '/admin/inventory',     'label' => 'Pet Inventory', 'icon' => '🐕'],
-                    ['url' => '/admin/supplies',      'label' => 'Pet Supplies',  'icon' => '🦴'],
-                    ['url' => '/admin/services',      'label' => 'Services',      'icon' => '✂️'],
-                    ['url' => '/admin/orders',        'label' => 'Orders',        'icon' => '📦'],
-                    ['url' => '/admin/sales-monitoring', 'label' => 'Sales Monitoring', 'icon' => '💰'],
-                    ['url' => '/admin/messages',      'label' => 'Messages',      'icon' => '✉️'],
+                    ['url' => '/admin/dashboard',        'label' => 'Dashboard',        'icon' => '📊', 'route' => 'admin.dashboard'],
+                    ['url' => '/admin/inventory',        'label' => 'Pet Inventory',     'icon' => '🐕', 'route' => 'admin.inventory'],
+                    ['url' => '/admin/supplies',         'label' => 'Pet Supplies',      'icon' => '🦴', 'route' => 'admin.supplies'],
+                    ['url' => '/admin/services',         'label' => 'Services',          'icon' => '✂️', 'route' => 'admin.services'],
+                    ['url' => '/admin/orders',           'label' => 'Orders',            'icon' => '📦', 'route' => 'admin.orders'],
+                    ['url' => '/admin/cashier',          'label' => 'Cashier',           'icon' => '🛒', 'route' => 'admin.cashier'],
+                    ['url' => '/admin/sales-monitoring', 'label' => 'Sales Monitoring',  'icon' => '💰', 'route' => 'admin.sales.*'],
+                    ['url' => '/admin/messages',         'label' => 'Messages',          'icon' => '✉️', 'route' => 'admin.messages'],
                 ];
             @endphp
 
             @foreach($navItems as $item)
             @php
-                // Determine if this nav item should be active
-                $isActive = false;
-                
-                if ($item['url'] === '/admin/sales-monitoring') {
-                    // Special handling for Sales Monitoring (matches both index and data routes)
-                    $isActive = request()->routeIs('admin.sales.*');
-                } else {
-                    // Standard URL matching for other items
-                    $isActive = request()->is(ltrim($item['url'], '/'));
-                }
+                $isActive = request()->routeIs($item['route']) || request()->is(ltrim($item['url'], '/'));
             @endphp
-            
+
             <a href="{{ $item['url'] }}"
                class="flex items-center gap-3 xl:gap-4 px-4 xl:px-6 py-3 xl:py-4 rounded-2xl transition-all duration-200
-               {{ $isActive 
-                  ? 'bg-[#E68A39] text-white font-bold shadow-md' 
+               {{ $isActive
+                  ? 'bg-[#E68A39] text-white font-bold shadow-md'
                   : 'text-[#5C4D3C] hover:bg-[#EBD7BC] hover:text-[#2D241E]' }}">
                 <span class="text-lg xl:text-xl {{ $isActive ? 'opacity-100' : 'opacity-70' }}">
                     {{ $item['icon'] }}
@@ -83,6 +75,8 @@
                 <span class="text-sm tracking-tight">{{ $item['label'] }}</span>
             </a>
             @endforeach
+
+            {{-- Divider before Cashier is handled by its position in the array above --}}
         </nav>
 
         {{-- User Info & Logout --}}

@@ -52,8 +52,9 @@ Route::post('/contact', [App\Http\Controllers\ContactController::class, 'send'])
 Route::get('/shop/3d', function () { return view('customer.3d-customizer'); })->name('shop.3d');
 
 // Order history
-Route::get('/shop/orders', function () { return view('customer.order-history'); })->name('shop.orders')->middleware('auth');
-
+Route::get('/shop/orders', [App\Http\Controllers\Customer\OrderHistoryController::class, 'index'])
+    ->name('shop.orders')
+    ->middleware('auth');
 // Customer messaging (auth only)
 Route::middleware('auth')->group(function () {
     Route::get('/api/my-messages',      [App\Http\Controllers\ContactController::class, 'myMessages'])
@@ -90,5 +91,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/supplies',  fn() => view('admin.supplies'))->name('supplies');
     Route::get('/services',  fn() => view('admin.services'))->name('services');
     Route::get('/messages',  fn() => view('admin.messages'))->name('messages');
+    Route::get('/cashier', fn() => view('admin.cashier'))->name('cashier');
 
 });

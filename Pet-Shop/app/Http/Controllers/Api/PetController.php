@@ -43,6 +43,8 @@ class PetController extends Controller
             'thresh'    => $p->low_stock_threshold,
             'image'     => $p->image_path ? Storage::url($p->image_path) : null,
             'status'    => $p->stock_status,
+            'description' => $p->description, 
+            'emoji'       => $p->emoji, 
         ]));
     }
  
@@ -56,6 +58,7 @@ class PetController extends Controller
             'stock'               => 'required|integer|min:0',
             'price'               => 'required|numeric|min:0',
             'low_stock_threshold' => 'required|integer|min:1',
+            'description'         => 'nullable|string',
             'image'               => 'nullable|image|max:2048',
         ]);
  
@@ -78,6 +81,7 @@ class PetController extends Controller
             'stock'               => 'sometimes|integer|min:0',
             'price'               => 'sometimes|numeric|min:0',
             'low_stock_threshold' => 'sometimes|integer|min:1',
+            'description'         => 'nullable|string',
             'image'               => 'nullable|image|max:2048',
         ]);
  

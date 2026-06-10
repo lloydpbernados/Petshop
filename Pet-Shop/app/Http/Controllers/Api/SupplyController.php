@@ -1,22 +1,20 @@
 <?php
-// ──────────────────────────────────────────────────────────
-// app/Http/Controllers/Api/SupplyController.php
-// ──────────────────────────────────────────────────────────
+
 namespace App\Http\Controllers\Api;
- 
+
 use App\Http\Controllers\Controller;
 use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
- 
+
 class SupplyController extends Controller
 {
     public function index(Request $request)
     {
         $query = Supply::query();
- 
-        if ($search = $request->q)        $query->where(fn($q) => $q->where('name','like',"%$search%")->orWhere('sku','like',"%$search%"));
-        if ($cat    = $request->category)  $query->where('category', $cat);
+
+        if ($search = $request->q)       $query->where(fn($q) => $q->where('name','like',"%$search%")->orWhere('sku','like',"%$search%"));
+        if ($cat    = $request->category) $query->where('category', $cat);
         if ($status = $request->status) {
             match ($status) {
                 'ok'  => $query->whereRaw('stock > low_stock_threshold'),
@@ -25,20 +23,22 @@ class SupplyController extends Controller
                 default => null,
             };
         }
- 
+
         return response()->json($query->get()->map(fn($s) => [
-            'id'       => $s->id,
-            'name'     => $s->name,
-            'sku'      => $s->sku,
-            'category' => $s->category,
-            'stock'    => $s->stock,
-            'price'    => $s->price,
-            'thresh'   => $s->low_stock_threshold,
-            'image'    => $s->image_path ? Storage::url($s->image_path) : null,
-            'status'   => $s->stock_status,
+            'id'             => $s->id,
+            'name'           => $s->name,
+            'sku'            => $s->sku,
+            'category'       => $s->category,
+            'stock'          => $s->stock,
+            'price'          => $s->price,
+            'thresh'         => $s->low_stock_threshold,
+            'image'          => $s->image_path ? Storage::url($s->image_path) : null,
+            'status'         => $s->stock_status,
+            'description'    => $s->description,
+            'weight_options' => $s->weight_options, // FIX 1: Included in the API response so the Edit Modal can see it
         ]));
     }
- 
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -48,16 +48,23 @@ class SupplyController extends Controller
             'stock'               => 'required|integer|min:0',
             'price'               => 'required|numeric|min:0',
             'low_stock_threshold' => 'required|integer|min:1',
+            'description'         => 'nullable|string',
             'image'               => 'nullable|image|max:2048',
+            'weight_options'      => 'nullable|string', // FIX 2: Allow the JSON string from FormData
         ]);
- 
+
+        // FIX 3: Decode the JSON string into an array for the Model
+        if (isset($data['weight_options'])) {
+            $data['weight_options'] = json_decode($data['weight_options'], true);
+        }
+
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('supplies', 'public');
         }
- 
+
         return response()->json(Supply::create($data), 201);
     }
- 
+
     public function update(Request $request, Supply $supply)
     {
         $data = $request->validate([
@@ -67,40 +74,50 @@ class SupplyController extends Controller
             'stock'               => 'sometimes|integer|min:0',
             'price'               => 'sometimes|numeric|min:0',
             'low_stock_threshold' => 'sometimes|integer|min:1',
+            'description'         => 'nullable|string',
             'image'               => 'nullable|image|max:2048',
+            'weight_options'      => 'nullable|string', // FIX 4: Allow updates
         ]);
- 
+
+        // FIX 5: Decode before updating
+        if (isset($data['weight_options'])) {
+            $data['weight_options'] = json_decode($data['weight_options'], true);
+        } elseif (array_key_exists('weight_options', $data) && is_null($data['weight_options'])) {
+             // Ensure it can be nulled out if all options are removed
+             $data['weight_options'] = null;
+        }
+
         if ($request->hasFile('image')) {
             if ($supply->image_path) Storage::disk('public')->delete($supply->image_path);
             $data['image_path'] = $request->file('image')->store('supplies', 'public');
         }
- 
+
         $supply->update($data);
         return response()->json($supply);
     }
- 
+
     public function adjustStock(Request $request, Supply $supply)
     {
         $delta = (int) $request->validate(['delta' => 'required|integer'])['delta'];
         $supply->stock = max(0, $supply->stock + $delta);
         $supply->save();
- 
+
         return response()->json(['stock' => $supply->stock, 'status' => $supply->stock_status]);
     }
- 
+
     public function restock(Request $request, Supply $supply)
     {
         $qty = (int) $request->validate(['qty' => 'required|integer|min:1'])['qty'];
         $supply->increment('stock', $qty);
- 
+
         return response()->json(['stock' => $supply->fresh()->stock]);
     }
- 
+
     public function destroy(Supply $supply)
     {
         if ($supply->image_path) Storage::disk('public')->delete($supply->image_path);
         $supply->delete();
- 
+
         return response()->json(['deleted' => true]);
     }
 }

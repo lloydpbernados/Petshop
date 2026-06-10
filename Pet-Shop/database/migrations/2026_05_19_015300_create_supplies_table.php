@@ -20,6 +20,7 @@ return new class extends Migration
             // Shop-facing fields
             $table->string('emoji')->default('📦');
             $table->text('description')->nullable();
+            $table->json('weight_options')->nullable();
             $table->string('badge')->nullable();
             $table->string('badge_label')->nullable();
             $table->boolean('available')->default(true);

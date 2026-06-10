@@ -1,5 +1,4 @@
 <?php
-// app/Models/OrderItem.php
 
 namespace App\Models;
 
@@ -11,11 +10,11 @@ class OrderItem extends Model
         'order_id',
         'item_name',
         'icon',
-        'item_type',    // 'pet' | 'supply' | 'service'
+        'item_type',
         'quantity',
         'price',
-        'scheduled_at', // date string for service bookings
-        'source_id',    // FK to pets.id / supplies.id / services.id
+        'scheduled_at',
+        'source_id',
     ];
 
     protected $casts = [

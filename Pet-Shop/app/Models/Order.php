@@ -8,10 +8,12 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     protected $fillable = [
+        'user_id',
         'order_number',
         'customer_name',
         'email',
         'shipping_address',
+        'total_amount',      // ✅ added — was missing, so total never saved
         'status',
         'payment_method',
         'gcash_reference',
@@ -20,7 +22,8 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'ordered_at' => 'datetime',
+        'ordered_at'   => 'datetime',
+        'total_amount' => 'float',
     ];
 
     // ── Relationships ──────────────────────────────────
@@ -30,8 +33,14 @@ class Order extends Model
     }
 
     // ── Computed ───────────────────────────────────────
+    // grand_total falls back to summing items if total_amount is 0 or null
     public function getGrandTotalAttribute(): float
     {
+        if (!empty($this->total_amount) && $this->total_amount > 0) {
+            return (float) $this->total_amount;
+        }
+
+        $this->loadMissing('items');
         return $this->items->sum(fn($i) => $i->price * $i->quantity);
     }
 
